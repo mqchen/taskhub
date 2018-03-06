@@ -1,0 +1,20 @@
+{
+  "name": "taskhub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "taskhub",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/mq.chen/taskhub.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/mq.chen/taskhub/issues"
+  },
+  "homepage": "https://gitlab.com/mq.chen/taskhub#README"
+}
