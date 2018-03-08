@@ -31,6 +31,7 @@ const client = new Client('ws:server:port', {
 });
 client.on('mail:send-bulk', async (task) => {
   // Tell the hub this service will begin work on this task, so that it knows to wait.
+  // Otherwise, the hub will assume a task is complete when all listening services has seen it, or timedout. (The timeout is short.)
   task.start(); 
 
   // Get payload
