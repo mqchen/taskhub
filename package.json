@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://gitlab.com/mq.chen/taskhub/issues"
   },
-  "homepage": "https://gitlab.com/mq.chen/taskhub#README"
+  "homepage": "https://gitlab.com/mq.chen/taskhub#README",
+  "dependencies": {
+    "ws": "^5.0.0"
+  }
 }
