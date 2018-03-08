@@ -9,11 +9,15 @@ Send it tasks, watch as they happen.
 ```javascript
 import { Server } from 'taskhub';
 
-const hub = new Server({ port: 9999 });
+const hub = new Server({
+  port: 9999,
+  taskStartTimeout: 100 // if hub waits longer than this for subscribing services the task has failed.
+  taskFinishTimeout: 1000 * 60 // default max time a task can run, override per task basis
+});
 hub.addCredential('mailer', {
   key: '---super-secret-key---',
-  listenPermissions: [ 'mail:send-bulk' ], // what the service is allowed to listen to
-  emitPermissions: [ 'log:error', 'log:warn', 'log:info', 'googlemaps' ], // what the service is allowed to emit. E.g. 'log' so that it can log stuff. 'googlemaps' to ask another service for geocoding there
+  subPermissions: [ 'mail:send-bulk' ], // what the service is allowed to listen to
+  pubPermissions: [ 'log:error', 'log:warn', 'log:info', 'googlemaps' ], // what the service is allowed to emit. E.g. 'log' so that it can log stuff. 'googlemaps' to ask another service for geocoding there
   maxInstances: 1 // only allow one simultaneous instance from this service. If > 1 hub will distribute events to each connection by round robin. Not implemented.
 });
 
@@ -29,7 +33,7 @@ const client = new Client('ws:server:port', {
   name: 'mailer' // unique name
   key: '---super-secret-key---'
 });
-client.on('mail:send-bulk', async (task) => {
+client.sub('mail:send-bulk', async (task) => {
   // Tell the hub this service will begin work on this task, so that it knows to wait.
   // Otherwise, the hub will assume a task is complete when all listening services has seen it, or timedout. (The timeout is short.)
   task.start(); 
@@ -40,18 +44,21 @@ client.on('mail:send-bulk', async (task) => {
   // Update the caller on current progress
   task.update(data);
 
-  // Done and the data is sent to the emitter.
+  // Done and the data is sent to the caller/publisher.
   return data;
 });
 
-// Call it
+// Calling
 try {
-  let result = await client.emit('mail:send-bulk', emails).getResult();
-} catch(TaskException e) { }
+  let result = await client.pub('mail:send-bulk', emails).getResult();
+} catch(err) { }
 
-// Call it with value if error, to avoid the excpetions
-let result = await client.emit('mail:send-bulk', emails).getResult(valueIfError);
+// Call it with value if error, to avoid the exceptions
+let result = await client.pub('mail:send-bulk', emails, 1000 * 60 * 30 /* 30 min */)
+  .getResult(valueIfError);
 
 // Call it with progress updates
-let finalResult = await client.emit('mail:send-bulk', emails).on('update', (tmpResult) => { /* something */ }).getResult(null);
+let finalResult = await client.pub('mail:send-bulk', emails)
+  .on('update', (tmpResult) => { /* something */ })
+  .getResult(valueIfError);
 ```
