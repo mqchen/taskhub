@@ -8,7 +8,7 @@ class Server {
     this.server = new WebSocket.Server({ ...defaultOpts, ...opts });
 
     this.server.on('connection', (client) => {
-      client.send('Opened');
+      client.send('New connection');
 
       client.on('message', (data) => {
         client.send(data);

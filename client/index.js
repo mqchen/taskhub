@@ -1,7 +1,6 @@
-
 class Client {
   constructor() {
-    
+
   }
 }
 
