@@ -18,6 +18,7 @@
   },
   "homepage": "https://gitlab.com/mq.chen/taskhub#README",
   "dependencies": {
+    "n": "^2.1.8",
     "ws": "^5.0.0"
   }
 }
