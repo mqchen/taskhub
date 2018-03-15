@@ -1,27 +1,37 @@
 const WebSocket = require('ws');
-const Auth = require('./auth.js');
 
 class Server {
   constructor(opts) {
     const defaultOpts = {
-      port: 8080
+      port: 8080,
+      verifyClient: this._verfyClient.bind(this)
     };
-    this.server = new WebSocket.Server({ ...defaultOpts, ...opts });
+    this.opts = { ...defaultOpts, ...opts };
+    this.server = new WebSocket.Server(this.opts);
     this.credentials = {};
     this.clients = {};
   }
 
+  _verfyClient(info, cb) {
+    const service = `${info.req.headers.service}`;
+    const key = `${info.req.headers.key}`;
+
+    if (this.credentials[service] && this.credentials[service].key === key) {
+      cb(true);
+      return;
+    }
+    cb(false, 401, 'Unauthorized');
+  }
+
   start() {
-    console.log('Starting server.');
+    console.log('Starting server on:', this.opts.port);
     this.server.on('connection', this._initClient.bind(this));
+    this.server.on('authenticate', console.log);
   }
 
   addCredential(service, creds) {
+    console.log(`Credentials added for '${service}' service.`);
     this.credentials[service] = creds;
-  }
-
-  getCredentialFor(service) {
-    return this.credentials[service];
   }
 
   static _sendMessage(client, status, obj) {
@@ -50,25 +60,11 @@ class Server {
 
   _execMessage(client, msg) {
     switch (msg.type) {
-      case 'auth': return this._execAuth(client, msg);
-      // TODO: kick unauthorized clients after a little time
-      // or if they send a non auth-message first.
       case 'pub': return this._execPubTask(client, msg);
       case 'sub': return this._execSub(client, msg);
       default:
         throw new TypeError(`Unsupported message type: ${msg.type}`);
     }
-  }
-
-  _execAuth(client, msg) {
-    if (!Auth(this, client, msg)) {
-      Server._sendMessage(client, 'error', { error: 'Error', message: 'Authentication failed.' });
-      client.terminate();
-    } else {
-      this.clients[msg.name] = client;
-      Server._sendMessage(client, 'ok');
-    }
-    // TODO: authenticate client. Kick if it fails.
   }
 
   _execPubTask(client, msg) {
