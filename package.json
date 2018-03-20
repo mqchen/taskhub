@@ -6,7 +6,7 @@
   "main": "app.js",
   "scripts": {
     "example": "node --harmony example/app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "ava"
   },
   "repository": {
     "type": "git",
@@ -19,7 +19,9 @@
   },
   "homepage": "https://gitlab.com/mq.chen/taskhub#README",
   "dependencies": {
-    "n": "^2.1.8",
     "ws": "^5.0.0"
+  },
+  "devDependencies": {
+    "ava": "^0.25.0"
   }
 }

@@ -7,10 +7,34 @@ class Server {
       verifyClient: this._verfyClient.bind(this)
     };
     this.opts = { ...defaultOpts, ...opts };
-    this.server = new WebSocket.Server(this.opts);
+    this.server = null;
     this.credentials = {};
     this.clients = {};
+
+    // Message store (will be moved to Redis or MongoDB)
+    this.messages = [];
   }
+
+  start() {
+    this.server = new WebSocket.Server(this.opts);
+    console.log('Starting server at:', this.server.address().port);
+    this.server.on('connection', this._initClient.bind(this));
+    return this.server.address();
+  }
+
+  stop() {
+    if (this.server) this.server.close();
+  }
+
+  addCredential(service, creds) {
+    console.log(`Credentials added for '${service}' service.`);
+    this.credentials[service] = creds;
+  }
+
+  removeCredential(service) {
+    delete this.credentials[service];
+  }
+
 
   _verfyClient(info, cb) {
     const service = `${info.req.headers.service}`;
@@ -21,17 +45,6 @@ class Server {
       return;
     }
     cb(false, 401, 'Unauthorized');
-  }
-
-  start() {
-    console.log('Starting server on:', this.opts.port);
-    this.server.on('connection', this._initClient.bind(this));
-    this.server.on('authenticate', console.log);
-  }
-
-  addCredential(service, creds) {
-    console.log(`Credentials added for '${service}' service.`);
-    this.credentials[service] = creds;
   }
 
   static _sendMessage(client, status, obj) {
