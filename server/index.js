@@ -8,6 +8,7 @@ class Server {
     };
     this.opts = { ...defaultOpts, ...opts };
     this.server = null;
+    this.address = null;
     this.credentials = {};
     this.clients = {};
 
@@ -19,7 +20,12 @@ class Server {
     this.server = new WebSocket.Server(this.opts);
     console.log('Starting server at:', this.server.address().port);
     this.server.on('connection', this._initClient.bind(this));
-    return this.server.address();
+    this.address = this.server.address();
+    return this.address;
+  }
+
+  isRunning() {
+    return !!this.address;
   }
 
   stop() {

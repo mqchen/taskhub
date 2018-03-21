@@ -13,6 +13,31 @@ test.afterEach.always((t) => {
   t.context.hub.stop();
 });
 
+async function createConnection(t) {
+  const address = t.context.hub.isRunning()
+    ? t.context.hub.address
+    : t.context.hub.start();
+  return new Promise((resolve) => {
+    const ws = new WebSocket(`ws://localhost:${address.port}`, 'ws', {
+      headers: {
+        service: t.context.serviceName,
+        key: t.context.creds.key
+      }
+    });
+    ws.on('open', () => resolve(ws));
+  });
+}
+
+async function oneResponse(ws) {
+  return new Promise((resolve) => {
+    function tmpFunc(msg) {
+      ws.removeEventListener('message', tmpFunc);
+      resolve(JSON.parse(msg));
+    }
+    ws.on('message', tmpFunc);
+  });
+}
+
 test('Should export Server class', (t) => {
   t.is(typeof Server, 'function');
 
@@ -32,24 +57,23 @@ test('Can add and remove credentials', (t) => {
   t.falsy(t.context.hub.credentials[name]);
 });
 
-test('Can authorize with correct info', (t) => {
-  t.plan(2);
-  const address = t.context.hub.start();
-  const ws = new WebSocket(`ws://localhost:${address.port}`, 'ws', {
-    headers: {
-      service: t.context.serviceName,
-      key: t.context.creds.key
-    }
-  });
-  return new Promise((resolve) => {
-    ws.on('open', () => {
-      t.is(ws.readyState, 1, 'Expects readyState to be 1 which means OPEN.');
-      ws.close();
-      resolve();
-    });
-  })
-  .then(r => t.pass(r))
-  .catch(r => t.fail(r));
+test('Can authorize with correct info', async (t) => {
+  const ws = await createConnection(t);
+  t.is(ws.readyState, WebSocket.OPEN, 'Expects readyState to be OPEN.');
+  ws.close();
+});
+
+test('Send bad message and expect error message back', async (t) => {
+  const ws = await createConnection(t);
+  ws.send('not JSON');
+  let reply = await oneResponse(ws);
+  t.is(reply.status, 'error');
+  t.is(reply.error, 'SyntaxError');
+
+  ws.send(JSON.stringify({ validJSONMessage: 'but without necessary fields' }));
+  reply = await oneResponse(ws);
+  t.is(reply.status, 'error');
+  t.is(reply.error, 'TypeError');
 });
 
 
