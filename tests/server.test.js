@@ -4,6 +4,9 @@ const WebSocket = require('ws');
 
 test.beforeEach((t) => {
   t.context.hub = new Server({ port: 0 });
+  t.context.hub.logger = { ...t.context.hub.logger,
+    log: () => {},
+    info: () => {} }; // Mute log
   t.context.creds = { key: `password: ${Math.random()}` };
   t.context.serviceName = `test_${Math.random()}`;
   t.context.hub.addCredential(t.context.serviceName, t.context.creds);
@@ -17,7 +20,7 @@ async function createConnection(t) {
   const address = t.context.hub.isRunning()
     ? t.context.hub.address
     : t.context.hub.start();
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const ws = new WebSocket(`ws://localhost:${address.port}`, 'ws', {
       headers: {
         service: t.context.serviceName,
@@ -25,6 +28,7 @@ async function createConnection(t) {
       }
     });
     ws.on('open', () => resolve(ws));
+    ws.on('close', () => reject(ws));
   });
 }
 
@@ -41,7 +45,7 @@ async function oneResponse(ws) {
 test('Should export Server class', (t) => {
   t.is(typeof Server, 'function');
 
-  const hub = new Server();
+  const hub = t.context.hub;
   t.is(typeof hub.start, 'function', 'Should expose start method.');
   t.is(typeof hub.stop, 'function', 'Should expose stop method.');
 });
@@ -78,6 +82,13 @@ test('Invalid message returns error message', async (t) => {
   t.is(reply.status, 'error');
   t.is(reply.error, 'TypeError');
   t.deepEqual(reply.request, msg2);
+
+  const msg3 = JSON.stringify({ type: 'invalid type' });
+  ws.send(msg3);
+  reply = await oneResponse(ws);
+  t.is(reply.status, 'error');
+  t.is(reply.error, 'TypeError');
+  t.deepEqual(reply.request, msg3);
 });
 
 

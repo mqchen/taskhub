@@ -1,4 +1,5 @@
 const WebSocket = require('ws');
+const ClientTask = require('./ClientTask');
 
 class Client {
   constructor(url, service, key) {
@@ -19,6 +20,19 @@ class Client {
   isOpen() {
     return this.ws.readyState === WebSocket.OPEN;
   }
+
+  pub(action, payload) {
+    return new ClientTask(action, payload);
+  }
+
+  sub(action, callback) {
+    this.ws.send(JSON.stringify({
+      task: 'sub',
+      action
+    }))
+  }
 }
+
+Client.Task = ClientTask;
 
 module.exports = Client;

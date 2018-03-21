@@ -19,7 +19,7 @@ class Server {
 
   start() {
     this.server = new WebSocket.Server(this.opts);
-    this.logger.log('Starting server at:', this.server.address().port);
+    this.logger.info('Starting server at:', this.server.address().port);
     this.server.on('connection', this._initClient.bind(this));
     this.address = this.server.address();
     return this.address;
@@ -81,7 +81,7 @@ class Server {
   _execMessage(client, msg) {
     switch (msg.type) {
       case 'pub': return this._execPubTask(client, msg);
-      case 'sub': return this._execSub(client, msg);
+      case 'sub': return this._execSubAction(client, msg);
       default:
         throw new TypeError(`Unsupported message type: ${msg.type}`);
     }
@@ -97,7 +97,7 @@ class Server {
     // TODO: check if client is authenticated before executing tasks
   }
 
-  _execSub(client, msg) {
+  _execSubAction(client, msg) {
     // TODO: check for auth before subbing to tasks
   }
 }
