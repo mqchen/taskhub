@@ -6,6 +6,7 @@ class Server {
       port: 8080,
       verifyClient: this._verfyClient.bind(this)
     };
+    this.logger = console;
     this.opts = { ...defaultOpts, ...opts };
     this.server = null;
     this.address = null;
@@ -18,7 +19,7 @@ class Server {
 
   start() {
     this.server = new WebSocket.Server(this.opts);
-    console.log('Starting server at:', this.server.address().port);
+    this.logger.log('Starting server at:', this.server.address().port);
     this.server.on('connection', this._initClient.bind(this));
     this.address = this.server.address();
     return this.address;
@@ -33,7 +34,7 @@ class Server {
   }
 
   addCredential(service, creds) {
-    console.log(`Credentials added for '${service}' service.`);
+    this.logger.log(`Credentials added for '${service}' service.`);
     this.credentials[service] = creds;
   }
 
@@ -63,7 +64,7 @@ class Server {
         const msg = Server._parseMessage(data);
         this._execMessage(client, msg);
       } catch (e) {
-        console.log('Invalid message:', e.message, data);
+        this.logger.log('Invalid message:', e.message, data);
         Server._sendMessage(client, 'error', { error: e.name, message: e.message, request: data });
       }
     });

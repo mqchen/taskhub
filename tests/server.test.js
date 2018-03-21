@@ -63,7 +63,7 @@ test('Can authorize with correct info', async (t) => {
   ws.close();
 });
 
-test('Send bad message and expect error message back', async (t) => {
+test('Invalid message returns error message', async (t) => {
   const ws = await createConnection(t);
   const msg1 = 'not JSON';
   ws.send(msg1);
