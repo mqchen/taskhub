@@ -65,15 +65,19 @@ test('Can authorize with correct info', async (t) => {
 
 test('Send bad message and expect error message back', async (t) => {
   const ws = await createConnection(t);
-  ws.send('not JSON');
+  const msg1 = 'not JSON';
+  ws.send(msg1);
   let reply = await oneResponse(ws);
   t.is(reply.status, 'error');
   t.is(reply.error, 'SyntaxError');
+  t.is(reply.request, msg1);
 
-  ws.send(JSON.stringify({ validJSONMessage: 'but without necessary fields' }));
+  const msg2 = JSON.stringify({ validJSONMessage: 'but without necessary fields' });
+  ws.send(msg2);
   reply = await oneResponse(ws);
   t.is(reply.status, 'error');
   t.is(reply.error, 'TypeError');
+  t.deepEqual(reply.request, msg2);
 });
 
 

@@ -64,7 +64,7 @@ class Server {
         this._execMessage(client, msg);
       } catch (e) {
         console.log('Invalid message:', e.message, data);
-        Server._sendMessage(client, 'error', { error: e.name, message: e.message });
+        Server._sendMessage(client, 'error', { error: e.name, message: e.message, request: data });
       }
     });
   }
