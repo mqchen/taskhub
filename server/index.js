@@ -1,4 +1,5 @@
 const WebSocket = require('ws');
+const ServerTask = require('./ServerTask');
 
 class Server {
   constructor(opts) {
@@ -13,8 +14,8 @@ class Server {
     this.credentials = {};
     this.clients = {};
 
-    // Message store (will be moved to Redis or MongoDB)
-    this.messages = [];
+    // Task store, will be moved to Redis or MongoDB in the future
+    this.tasks = {};
   }
 
   start() {
@@ -89,16 +90,16 @@ class Server {
 
   _execPubTask(client, msg) {
     // Validate message
-    if (!Object.prototype.hasOwnProperty.call(msg, 'action')
-    || !Object.prototype.hasOwnProperty.call(msg, 'payload')) {
-      throw new TypeError('Pub messages must have props: action, payload.');
+    if (!['action', 'payload', 'event', 'id']
+      .every(key => Object.prototype.hasOwnProperty.call(msg, key))) {
+      throw new TypeError('Pub messages must have props: action, payload, event, id.');
     }
 
-    // TODO: check if client is authenticated before executing tasks
+    const task = this.tasks[msg.id] || new ServerTask(msg.action, msg.payload);
+    task.addMessage(msg);
   }
 
   _execSubAction(client, msg) {
-    // TODO: check for auth before subbing to tasks
   }
 }
 

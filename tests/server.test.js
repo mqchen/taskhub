@@ -89,6 +89,13 @@ test('Invalid message returns error message', async (t) => {
   t.is(reply.status, 'error');
   t.is(reply.error, 'TypeError');
   t.deepEqual(reply.request, msg3);
+
+  const msg4 = JSON.stringify({ type: 'pub', action: '', payload: {}, id: '', event: 'invalid event' });
+  ws.send(msg4);
+  reply = await oneResponse(ws);
+  t.is(reply.status, 'error');
+  t.is(reply.error, 'RangeError');
+  t.deepEqual(reply.request, msg4);
 });
 
 

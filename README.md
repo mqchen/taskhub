@@ -4,6 +4,7 @@ PubSubHub - Send it tasks, watch as they happen.
 
 # Task lifecycle
 
+- `init`: A client asks to start this event
 - `start`: A task has been received by the hub and will be sent to subbing services.
   - `pickup`: A service subbing to this task type has picked it up and started work on it.
   - `update`: A service updates all other subbing services about an update.
