@@ -1,8 +1,10 @@
 
 class ClientTask {
-  constructor(action, payload) {
+  constructor(client, action, payload) {
+    this.client = client;
     this.action = action;
     this.payload = payload;
+    this.result = null;
   }
 
   // TODO
@@ -16,7 +18,9 @@ class ClientTask {
   off() {}
   once() {}
 
-  async getResult() {}
+  async getResult() {
+    return this.result;
+  }
 }
 
 module.exports = ClientTask;

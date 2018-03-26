@@ -12,8 +12,10 @@ class Server {
     this.server = null;
     this.address = null;
     this.credentials = {};
-    this.clients = {};
+    this.clients = [];
 
+    // subs
+    this.subs = {};
     // Task store, will be moved to Redis or MongoDB in the future
     this.tasks = {};
   }
@@ -56,10 +58,12 @@ class Server {
   }
 
   static _sendMessage(client, status, obj) {
+    if (!['ok', 'error'].includes(status)) throw new RangeError('Status must be either: ok or error.');
     client.send(JSON.stringify({ status, ...obj }));
   }
 
   _initClient(client) {
+    this.clients.push(client);
     client.on('message', (data) => {
       try {
         const msg = Server._parseMessage(data);
@@ -88,18 +92,39 @@ class Server {
     }
   }
 
-  _execPubTask(client, msg) {
-    // Validate message
-    if (!['action', 'payload', 'event', 'id']
-      .every(key => Object.prototype.hasOwnProperty.call(msg, key))) {
-      throw new TypeError('Pub messages must have props: action, payload, event, id.');
-    }
+  _findSubs(action) {
+    return this.subs[action] || [];
+  }
 
-    const task = this.tasks[msg.id] || new ServerTask(msg.action, msg.payload);
+  _addSub(action, client) {
+    // TODO: prevent duplicates
+    if (!this.subs[action]) this.subs[action] = [];
+    this.subs[action].push(client);
+  }
+
+  _execPubTask(client, msg) {
+    if (!ServerTask.validateMessage(msg)) return;
+
+    const task = this.tasks[msg.id] || new ServerTask(msg.id, msg.action, msg.payload);
     task.addMessage(msg);
+
+    this._findSubs(msg.action).forEach((sub) => {
+      Server._sendMessage(sub, 'ok', {
+        id: msg.id,
+        action: task.action,
+        payload: task.payload,
+        event: task.lastEvent,
+        result: task.result
+      });
+    });
   }
 
   _execSubAction(client, msg) {
+    if (!['action'].every(key => Object.prototype.hasOwnProperty.call(msg, key))) {
+      throw new TypeError('Sub messages must have props: action.');
+    }
+    this._addSub(msg.action, client);
+    Server._sendMessage(client, 'ok', { message: `Client subscribed to ${msg.action}.` });
   }
 }
 

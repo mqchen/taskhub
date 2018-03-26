@@ -8,6 +8,7 @@ class Client {
     this.ws = new WebSocket(url, 'ws', {
       headers: { service, key }
     });
+    this.ws.on('message', this._processMessage.bind(this));
     this.subs = {};
     this.tasks = {};
   }
@@ -20,14 +21,18 @@ class Client {
     });
   }
 
+  _processMessage(message) {
+    console.log('123123', message);
+  }
+
   isOpen() {
     return this.ws.readyState === WebSocket.OPEN;
   }
 
   pub(action, payload) {
     const id = uuid();
-    this.ws.send(JSON.stringify({ task: 'pub', action, payload, id, event: 'init' }));
-    this.tasks[id] = new ClientTask(action, payload);
+    this.ws.send(JSON.stringify({ type: 'pub', action, payload, id, event: 'init' }));
+    this.tasks[id] = new ClientTask(this, action, payload);
     return this.tasks[id];
   }
 
@@ -35,7 +40,7 @@ class Client {
     if (!this.subs[action]) this.subs[action] = [];
     this.subs[action].push(callback);
 
-    this.ws.send(JSON.stringify({ task: 'sub', action }));
+    this.ws.send(JSON.stringify({ type: 'sub', action }));
   }
 }
 

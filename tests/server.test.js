@@ -1,6 +1,7 @@
 const test = require('ava');
 const Server = require('../server');
 const WebSocket = require('ws');
+const uuid = require('uuid/v4');
 
 test.beforeEach((t) => {
   t.context.hub = new Server({ port: 0 });
@@ -90,7 +91,7 @@ test('Invalid message returns error message', async (t) => {
   t.is(reply.error, 'TypeError');
   t.deepEqual(reply.request, msg3);
 
-  const msg4 = JSON.stringify({ type: 'pub', action: '', payload: {}, id: '', event: 'invalid event' });
+  const msg4 = JSON.stringify({ type: 'pub', action: '', payload: {}, id: uuid(), event: 'invalid event' });
   ws.send(msg4);
   reply = await oneResponse(ws);
   t.is(reply.status, 'error');
@@ -98,6 +99,44 @@ test('Invalid message returns error message', async (t) => {
   t.deepEqual(reply.request, msg4);
 });
 
+test('Sub message should add subscriber, and a Pub msg should trigger it', async (t) => {
+  const ws1 = await createConnection(t);
+  const ws2 = await createConnection(t);
+  const action = `test-service:method_${Math.random()}`;
+
+  ws1.send(JSON.stringify({ type: 'sub', action }));
+  const reply = await oneResponse(ws1);
+
+  t.is(reply.status, 'ok');
+  t.is(t.context.hub._findSubs(action).length, 1, 'Should add something in subs.');
+
+  ws2.send(JSON.stringify({ type: 'pub', action, payload: {}, id: uuid(), event: 'init' }));
+  const reply2 = await oneResponse(ws1);
+
+  t.is(reply2.status, 'ok');
+  t.is(reply2.action, action);
+});
+
+test('Complete msg should update subscribers with result', async (t) => {
+  const ws1 = await createConnection(t);
+  const ws2 = await createConnection(t);
+  const action = `test-service:method_${Math.random()}`;
+  const result = `result_${Math.random()}`;
+  const taskId = uuid();
+
+  ws1.send(JSON.stringify({ type: 'sub', action }));
+  await oneResponse(ws1); // Pop
+
+  ws2.send(JSON.stringify({ type: 'pub', action, payload: {}, id: taskId, event: 'init' }));
+
+  const reply1 = await oneResponse(ws1);
+  t.is(reply1.result, null);
+
+  ws2.send(JSON.stringify({ type: 'pub', action, payload: {}, id: taskId, event: 'complete', result }));
+
+  const reply3 = await oneResponse(ws1);
+  t.is(reply3.result, result);
+});
 
 // Impossible to catch an async exception... and impossible to prevent ws from throwing
 // test('Close unauthorized connections', async (t) => {
