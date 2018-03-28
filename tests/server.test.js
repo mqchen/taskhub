@@ -65,6 +65,7 @@ test('Can add and remove credentials', (t) => {
 test('Can authorize with correct info', async (t) => {
   const ws = await createConnection(t);
   t.is(ws.readyState, WebSocket.OPEN, 'Expects readyState to be OPEN.');
+  t.deepEqual(Object.keys(t.context.hub.clients), [t.context.serviceName], 'Client should be registered and identified');
   ws.close();
 });
 

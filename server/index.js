@@ -1,3 +1,5 @@
+/* eslint class-methods-use-this: ["error", { "exceptMethods": ["_sendMessageToClient"] }] */
+
 const WebSocket = require('ws');
 const ServerTask = require('./ServerTask');
 
@@ -45,7 +47,7 @@ class Server {
     delete this.credentials[service];
   }
 
-
+  // Verify and init clients
   _verfyClient(info, cb) {
     const service = `${info.req.headers.service}`;
     const key = `${info.req.headers.key}`;
@@ -57,22 +59,48 @@ class Server {
     cb(false, 401, 'Unauthorized');
   }
 
-  static _sendMessage(client, status, obj) {
+  _getClientsFor(serviceName) {
+    return this.clients[serviceName] || [];
+  }
+
+  _initClient(client, req) {
+    // Register client
+    const serviceName = req.headers.service;
+    if (!this.clients[serviceName]) this.clients[serviceName] = [];
+    this._getClientsFor(serviceName).push(client);
+
+    // Register events
+    client.on('message', (data) => {
+      try {
+        this._execMessage(serviceName, client, data);
+      } catch (e) {
+        this.logger.log('Invalid message:', e.message, data);
+        this._sendMessageToClient(client, 'error', { error: e.name, message: e.message, request: data });
+      }
+    });
+  }
+
+  // Send messages
+  _sendMessage(serviceName, status, obj) {
+    this._getClientsFor(serviceName).forEach((client) => {
+      this._sendMessageToClient(client, status, obj);
+    });
+  }
+
+  _sendMessageToClient(client, status, obj) {
     if (!['ok', 'error'].includes(status)) throw new RangeError('Status must be either: ok or error.');
     client.send(JSON.stringify({ status, ...obj }));
   }
 
-  _initClient(client) {
-    this.clients.push(client);
-    client.on('message', (data) => {
-      try {
-        const msg = Server._parseMessage(data);
-        this._execMessage(client, msg);
-      } catch (e) {
-        this.logger.log('Invalid message:', e.message, data);
-        Server._sendMessage(client, 'error', { error: e.name, message: e.message, request: data });
-      }
-    });
+  // Handle messages
+  _execMessage(serviceName, client, rawMsg) {
+    const msg = Server._parseMessage(rawMsg);
+    switch (msg.type) {
+      case 'pub': return this._execPubTask(serviceName, client, msg);
+      case 'sub': return this._execSubAction(serviceName, client, msg);
+      default:
+        throw new TypeError(`Unsupported message type: ${msg.type}`);
+    }
   }
 
   static _parseMessage(rawData) {
@@ -83,33 +111,31 @@ class Server {
     return json;
   }
 
-  _execMessage(client, msg) {
-    switch (msg.type) {
-      case 'pub': return this._execPubTask(client, msg);
-      case 'sub': return this._execSubAction(client, msg);
-      default:
-        throw new TypeError(`Unsupported message type: ${msg.type}`);
+
+  // Subscribe tasks
+  _execSubAction(serviceName, client, msg) {
+    if (!['action'].every(key => Object.prototype.hasOwnProperty.call(msg, key))) {
+      throw new TypeError('Sub messages must have props: action.');
     }
+    this._addSub(msg.action, serviceName);
+    this._sendMessageToClient(client, 'ok', { message: `Client subscribed to ${msg.action}.` });
   }
 
-  _findSubs(action) {
-    return this.subs[action] || [];
-  }
-
-  _addSub(action, client) {
-    // TODO: prevent duplicates
+  _addSub(action, serviceName) {
     if (!this.subs[action]) this.subs[action] = [];
-    this.subs[action].push(client);
+    this.subs[action].push(serviceName);
   }
 
-  _execPubTask(client, msg) {
+
+  // Publish tasks
+  _execPubTask(serviceName, client, msg) {
     if (!ServerTask.validateMessage(msg)) return;
 
     const task = this.tasks[msg.id] || new ServerTask(msg.id, msg.action, msg.payload);
     task.addMessage(msg);
 
-    this._findSubs(msg.action).forEach((sub) => {
-      Server._sendMessage(sub, 'ok', {
+    this._findSubs(msg.action).forEach((subService) => {
+      this._sendMessage(subService, 'ok', {
         id: msg.id,
         action: task.action,
         payload: task.payload,
@@ -118,13 +144,8 @@ class Server {
       });
     });
   }
-
-  _execSubAction(client, msg) {
-    if (!['action'].every(key => Object.prototype.hasOwnProperty.call(msg, key))) {
-      throw new TypeError('Sub messages must have props: action.');
-    }
-    this._addSub(msg.action, client);
-    Server._sendMessage(client, 'ok', { message: `Client subscribed to ${msg.action}.` });
+  _findSubs(action) {
+    return this.subs[action] || [];
   }
 }
 
