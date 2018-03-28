@@ -114,7 +114,7 @@ class Server {
 
   // Subscribe tasks
   _execSubAction(serviceName, client, msg) {
-    if (!['action'].every(key => Object.prototype.hasOwnProperty.call(msg, key))) {
+    if (!Object.prototype.hasOwnProperty.call(msg, 'action')) {
       throw new TypeError('Sub messages must have props: action.');
     }
     this._addSub(msg.action, serviceName);
@@ -123,6 +123,7 @@ class Server {
 
   _addSub(action, serviceName) {
     if (!this.subs[action]) this.subs[action] = [];
+    if (this.subs[action].includes(serviceName)) return;
     this.subs[action].push(serviceName);
   }
 

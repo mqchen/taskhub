@@ -2,11 +2,21 @@ const test = require('ava');
 const Client = require('../client');
 const Server = require('../server');
 
+async function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(), ms);
+  });
+}
+
 async function createClient(t) {
-  return Client.create(
+  const client = await Client.create(
     `ws://localhost:${t.context.hub.address.port}`,
     t.context.serviceName,
     t.context.creds.key);
+  client.logger = { ...client.logger,
+    log: () => {},
+    info: () => {} }; // Mute log
+  return client;
 }
 
 test.beforeEach(async (t) => {
@@ -35,12 +45,26 @@ test('Basic task posting without expecting anything', async (t) => {
   t.true(task instanceof Client.Task);
 });
 
+test('Subs should be called on Pubs', async (t) => {
+  t.plan(2);
+  const client = t.context.client;
+  client.sub('test:action', () => t.pass('Called'));
+  client.sub('test:action', () => t.pass('Also called'));
+  client.sub('test:action', () => {}); // Noop
+  client.sub('test:another-action', () => t.fail('Should not be called'));
+  client.pub('test:action');
+  await wait(50); // wait for it to get a change to run
+});
+
 // test('Post task and get reply', async (t) => {
 //   const client = t.context.client;
 //
 //   const result = `result_${Math.random()}`;
 //   client.sub('test:test', () => result); // This service only replies with static result.
+//   const task = client.pub('test:test', {});
 //
-//   const response = await client.pub('test:test', { thisIsThePayload: 'some data' }).getResult();
+//   await wait(50);
+//
+//   const response = await task.getResult();
 //   t.is(response, result);
 // });

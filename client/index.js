@@ -11,6 +11,7 @@ class Client {
     this.ws.on('message', this._processMessage.bind(this));
     this.subs = {};
     this.tasks = {};
+    this.logger = console;
   }
 
   static async create(url, service, key) {
@@ -21,8 +22,10 @@ class Client {
     });
   }
 
-  _processMessage(message) {
-    console.log('123123', message);
+  _processMessage(data) {
+    this.logger.log('Message received:', data);
+    const msg = JSON.parse(data);
+    this._findSubs(msg.action).forEach((callback) => { callback.call(null, msg); });
   }
 
   isOpen() {
@@ -31,9 +34,13 @@ class Client {
 
   pub(action, payload) {
     const id = uuid();
-    this.ws.send(JSON.stringify({ type: 'pub', action, payload, id, event: 'init' }));
+    this.ws.send(JSON.stringify({ type: 'pub', action, payload: payload || null, id, event: 'init' }));
     this.tasks[id] = new ClientTask(this, action, payload);
     return this.tasks[id];
+  }
+
+  _findSubs(action) {
+    return this.subs[action] || [];
   }
 
   sub(action, callback) {
