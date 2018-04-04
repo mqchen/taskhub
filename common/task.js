@@ -5,7 +5,7 @@
 const EventEmitter = require('event-emitter');
 
 const PROPS = ['action', 'event', 'id', 'payload', 'result'];
-const EVENTS = ['init', 'start', 'pickup', 'update', 'drop', 'complete', 'cancel', 'end'];
+const EVENTS = ['init', 'start', 'pickup', 'update', 'drop', 'complete', 'fail', 'cancel', 'end'];
 
 class Task {
   constructor() {
@@ -59,11 +59,15 @@ class Task {
       case 'complete':
         if (!this.hasHappened('start')) this._setState('start', now);
         break;
+      case 'fail':
+        if (!this.hasHappened('start')) this._setState('start', now);
+        break;
       case 'cancel':
         if (!this.hasHappened('start')) this._setState('start', now);
         break;
       case 'end':
         if (!this.hasHappened('complete') && !this.hasHappened('cancel')) {
+          this._setState('fail', now);
           this._setState('cancel', now);
         }
         break;
@@ -126,17 +130,22 @@ class Task {
   }
 
   async getResult(def) {
-    if (this.hasHappened('complete')) return Promise.resolve(this._result);
-    if (this.hasHappened('cancel')) {
+    const rej = () => {
       if (def) return Promise.resolve(def);
       return Promise.reject();
-    }
+    };
+    if (this.hasHappened('cancel')) return rej();
+    if (this.hasHappened('fail')) return rej();
+    if (this.hasHappened('complete')) return Promise.resolve(this._result);
+
     return new Promise((resolve, reject) => {
-      this.once('complete', () => resolve(this._result));
-      this.once('cancel', () => {
+      const rej2 = () => {
         if (def) return resolve(def);
         return reject();
-      });
+      };
+      this.once('cancel', rej2);
+      this.once('fail', rej2);
+      this.once('complete', () => resolve(this._result));
     });
   }
 }

@@ -24,6 +24,17 @@ test('setting state and lifecycle logic', (t) => {
   task2._setState('end');
   t.true(task2.hasHappened('cancel'), 'Setting end without complete implicitly sets cancel.');
   t.false(task2.hasHappened('complete'), 'Setting end without complete should not set complete.');
+
+  const task3 = new Task();
+  task3._setState('complete');
+  t.true(task3.hasHappened('start'));
+  t.true(task3.hasHappened('complete'));
+
+  const task4 = new Task();
+  task4._setState('fail');
+  t.true(task4.hasHappened('start'));
+  t.true(task4.hasHappened('fail'));
+  t.false(task4.hasHappened('complete'));
 });
 
 test('validateMessage()', (t) => {
@@ -164,10 +175,16 @@ test('getResult(): getting from cancelled task without default should throw exce
   task.getResult().catch(() => t.pass());
 });
 
-test('getResult(): getting result from cancelled task with default', async (t) => {
-  t.plan(1);
+test('getResult(): getting result from cancelled or failed task with default', async (t) => {
+  t.plan(2);
+
   const task = new Task();
   const expectedResult = `result_${uuid()}`;
   task.addMessage({ event: 'cancel', action: 'test', id: uuid() });
   t.is(await task.getResult(expectedResult), expectedResult, 'Should return default on cancelled task.');
+
+  const task2 = new Task();
+  const expectedResult2 = `result_${uuid()}`;
+  task2.addMessage({ event: 'fail', action: 'test', id: uuid() });
+  t.is(await task2.getResult(expectedResult2), expectedResult2, 'Should return default on failed task.');
 });
