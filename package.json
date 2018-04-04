@@ -19,6 +19,7 @@
   },
   "homepage": "https://gitlab.com/mq.chen/taskhub#README",
   "dependencies": {
+    "event-emitter": "^0.3.5",
     "uuid": "^3.2.1",
     "ws": "^5.0.0"
   },

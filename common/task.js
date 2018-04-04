@@ -1,13 +1,24 @@
+/* eslint class-methods-use-this: "off" */
+/* eslint-env es6 */
 
-const PROPS = ['action', 'payload', 'event', 'id'];
+const EventEmitter = require('event-emitter');
+
+const PROPS = ['action', 'event', 'id', 'payload', 'result'];
 const EVENTS = ['init', 'start', 'pickup', 'update', 'drop', 'complete', 'cancel', 'end'];
 
 class Task {
   constructor() {
-    this.payload = null;
-    this.result = null;
-    this.status = null;
+    this._payload = null;
+    this._result = null;
+    this._status = null;
     this._messages = [];
+
+    // Setup emitter
+    this._emitter = () => {};
+    EventEmitter(this._emitter);
+    ['on', 'off', 'once'].forEach((method) => {
+      this[method] = this._emitter[method];
+    });
   }
 
   validateMessage(msg) {
@@ -24,8 +35,9 @@ class Task {
   addMessage(rawMsg) {
     const msg = Object.assign({}, rawMsg);
 
-    // Payload is optional
+    // Payload and result is optional
     if (!msg.payload) msg.payload = null;
+    if (!msg.result) msg.result = null;
 
     if (!this.validateMessage(msg)) return false;
 
@@ -35,14 +47,20 @@ class Task {
 
     // Remove unncessary props
     const okMsg = {};
-    PROPS.forEach((prop) => {
-      okMsg[prop] = msg[prop];
-    });
+    PROPS.forEach((prop) => { okMsg[prop] = msg[prop]; });
 
-    if (msg.payload) this.payload = msg.payload;
-
-    // if (msg.event === 'complete') this.result = msg.result;
     this._messages.push(okMsg);
+    this._status = okMsg.event;
+
+    switch (this._status) {
+      case 'init':
+        if (okMsg.payload) this._payload = okMsg.payload;
+        break;
+      case 'complete':
+        if (okMsg.result) this._result = okMsg.result;
+        break;
+      default:
+    }
 
     return true;
   }
@@ -52,9 +70,12 @@ class Task {
   }
 
   async getPayload() {
-    return Object.assign({}, this.payload);
+    return Object.assign({}, this._payload);
   }
 
+  async getResult() {
+    return this._result;
+  }
 }
 
 module.exports = Task;
