@@ -3,9 +3,7 @@ const Client = require('../client');
 const Server = require('../server');
 
 async function wait(ms) {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(), ms);
-  });
+  return new Promise((resolve) => { setTimeout(() => resolve(), ms); });
 }
 
 async function createClient(t) {

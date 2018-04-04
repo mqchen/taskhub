@@ -1,4 +1,5 @@
 /* eslint class-methods-use-this: "off" */
+/* eslint no-labels: "off" */
 /* eslint-env es6 */
 
 const EventEmitter = require('event-emitter');
@@ -10,14 +11,20 @@ class Task {
   constructor() {
     this._payload = null;
     this._result = null;
-    this._status = null;
+    this._state = null;
     this._messages = [];
+    this._events = {};
+    EVENTS.forEach((event) => { this._events[event] = []; });
 
     // Setup emitter
+    this._setupEmitter();
+  }
+
+  _setupEmitter() {
     this._emitter = () => {};
     EventEmitter(this._emitter);
     ['on', 'off', 'once'].forEach((method) => {
-      this[method] = this._emitter[method];
+      this[method] = (...args) => this._emitter[method](...args);
     });
   }
 
@@ -30,6 +37,51 @@ class Task {
       throw new RangeError(`Unsupported event in message: '${msg.event}'.`);
     }
     return true;
+  }
+
+  _setState(event, time) {
+    const now = time || Date.now();
+
+    switch (event) {
+      case 'init': break;
+      case 'start':
+        if (!this.hasHappened('init')) this._setState('init', now);
+        break;
+      case 'pickup':
+        if (!this.hasHappened('start')) this._setState('start', now);
+        break;
+      case 'update':
+        if (!this.hasHappened('pickup')) this._setState('pickup', now);
+        break;
+      case 'drop':
+        if (!this.hasHappened('pickup')) this._setState('pickup', now);
+        break;
+      case 'complete':
+        if (!this.hasHappened('start')) this._setState('start', now);
+        break;
+      case 'cancel':
+        if (!this.hasHappened('start')) this._setState('start', now);
+        break;
+      case 'end':
+        if (!this.hasHappened('complete') && !this.hasHappened('cancel')) {
+          this._setState('cancel', now);
+        }
+        break;
+      default: return false;
+    }
+
+    this._state = event;
+    this._events[event].push(now);
+    this._emitter.emit(event, this);
+    return true;
+  }
+
+  hasHappened(event) {
+    return this._events[event].length > 0;
+  }
+
+  getState() {
+    return this._state;
   }
 
   addMessage(rawMsg) {
@@ -49,10 +101,7 @@ class Task {
     const okMsg = {};
     PROPS.forEach((prop) => { okMsg[prop] = msg[prop]; });
 
-    this._messages.push(okMsg);
-    this._status = okMsg.event;
-
-    switch (this._status) {
+    switch (okMsg.event) {
       case 'init':
         if (okMsg.payload) this._payload = okMsg.payload;
         break;
@@ -61,6 +110,9 @@ class Task {
         break;
       default:
     }
+
+    this._messages.push(okMsg);
+    this._setState(okMsg.event);
 
     return true;
   }
@@ -73,8 +125,19 @@ class Task {
     return Object.assign({}, this._payload);
   }
 
-  async getResult() {
-    return this._result;
+  async getResult(def) {
+    if (this.hasHappened('complete')) return Promise.resolve(this._result);
+    if (this.hasHappened('cancel')) {
+      if (def) return Promise.resolve(def);
+      return Promise.reject();
+    }
+    return new Promise((resolve, reject) => {
+      this.once('complete', () => resolve(this._result));
+      this.once('cancel', () => {
+        if (def) return resolve(def);
+        return reject();
+      });
+    });
   }
 }
 
