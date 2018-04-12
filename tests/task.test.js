@@ -38,28 +38,27 @@ test('setting state and lifecycle logic', (t) => {
 });
 
 test('validateMessage()', (t) => {
-  const task = new Task();
-  t.is(typeof task.validateMessage, 'function', 'Should have validateMessage method');
+  t.is(typeof Task.validateMessage, 'function', 'Should have _static_ validateMessage method');
 
   const badMsg1 = 'not even json';
   t.throws(() => {
-    task.validateMessage(badMsg1);
+    Task.validateMessage(badMsg1);
   }, TypeError);
 
   const badMsg2 = { json: 'but missing', mandatory: 'fields' };
   t.throws(() => {
-    task.validateMessage(badMsg2);
+    Task.validateMessage(badMsg2);
   }, TypeError);
 
-  const badMsg3 = { action: 'something', payload: null, result: null, id: 'x', event: 'UNSOPPORTED EVENT' };
+  const badMsg3 = { action: 'something', payload: null, result: null, msgId: 'x', event: 'UNSUPPORTED EVENT' };
   t.throws(() => {
-    task.validateMessage(badMsg3);
+    Task.validateMessage(badMsg3);
   }, RangeError);
 
   ['init', 'start', 'pickup', 'update', 'drop', 'complete', 'cancel', 'end'].forEach((event) => {
-    const goodMsg = { action: 'something', payload: null, result: null, id: 'x', event };
+    const goodMsg = { action: 'something', payload: null, result: null, msgId: 'x', update: null, event };
     t.notThrows(() => {
-      t.true(task.validateMessage(goodMsg));
+      t.true(Task.validateMessage(goodMsg));
     });
   });
 });
@@ -74,7 +73,7 @@ test('addMessage()', (t) => {
   const task = new Task();
   t.is(typeof task.addMessage, 'function', 'Should have addMessage method.');
 
-  t.truthy(task.addMessage({ action: 'hello:world', id: uuid(), event: 'init' }), 'Should be able to add without the optional props: payload and result');
+  t.truthy(task.addMessage({ action: 'hello:world', msgId: uuid(), event: 'init', payload: null }), 'Should be able to add without the optional props: payload and result');
 });
 
 test('addMessage(): should prevent duplicate messages being added', (t) => {
@@ -83,9 +82,9 @@ test('addMessage(): should prevent duplicate messages being added', (t) => {
 
   const id = uuid();
 
-  task.addMessage({ action: 'hello:world', id, event: 'init' });
-  t.throws(() => { task.addMessage({ action: 'hello:world', id, event: 'start' }); }, Error);
-  task.addMessage({ action: 'hello:world', id: uuid(), event: 'start' });
+  task.addMessage({ event: 'init', action: 'hello:world', msgId: id, payload: null });
+  t.throws(() => { task.addMessage({ msgId: id, event: 'start' }); }, Error, 'Should throw when adding message of same id twice.');
+  task.addMessage({ event: 'start', action: 'hello:world', msgId: uuid() });
 
   t.is(task.getMessages().length, 2, 'The duplicate event should be ignored.');
 });
@@ -93,7 +92,7 @@ test('addMessage(): should prevent duplicate messages being added', (t) => {
 test('addMessage(): should exclude unnecessary props from messages.', (t) => {
   const task = new Task();
 
-  const bloatedMsg = { action: 'hello:world', payload: null, result: null, id: uuid(), event: 'init', something: 'else' };
+  const bloatedMsg = { action: 'hello:world', payload: null, msgId: uuid(), event: 'init', something: 'else' };
   const expectedMsg = { ...bloatedMsg };
   delete expectedMsg.something;
 
@@ -105,7 +104,7 @@ test('getMessages(): should return copies of messages', (t) => {
   const task = new Task();
 
   const id = uuid();
-  const msg = { action: 'hello:world', id, payload: null, event: 'init', result: null };
+  const msg = { action: 'hello:world', msgId: id, event: 'init', payload: null };
   task.addMessage(msg);
 
   t.not(task.getMessages()[0], msg, 'Should be equal but not the same object.');
@@ -117,13 +116,13 @@ test('getPayload()', async (t) => {
 
   t.is(typeof task.getPayload, 'function');
 
-  const msg1 = { action: 'a', id: uuid(), payload: { foo: 'bar' }, event: 'init' };
+  const msg1 = { action: 'a', msgId: uuid(), payload: { foo: 'bar' }, event: 'init' };
   task.addMessage(msg1);
 
   t.not(await task.getPayload(), msg1.payload);
   t.deepEqual(await task.getPayload(), msg1.payload);
 
-  task.addMessage({ ...msg1, id: uuid(), payload: null });
+  task.addMessage({ ...msg1, msgId: uuid(), payload: null });
   t.not(await task.getPayload(), null, 'Events without payloads should not overwrite the payload.');
 });
 
@@ -161,7 +160,7 @@ test('getResult(): should resolve when complete event has been triggered', async
   task.getResult().then((result) => {
     t.is(result, expectedResult, 'Should be the result from the message');
   });
-  task.addMessage({ event: 'complete', action: 'something', result: expectedResult, id: uuid() });
+  task.addMessage({ event: 'complete', action: 'something', result: expectedResult, msgId: uuid() });
 
   t.is(await task.getResult(), expectedResult, 'Getting result from completed task should return it immediately.');
 
@@ -171,7 +170,7 @@ test('getResult(): should resolve when complete event has been triggered', async
 test('getResult(): getting from cancelled task without default should throw exception', async (t) => {
   t.plan(1);
   const task = new Task();
-  task.addMessage({ event: 'cancel', action: 'test', id: uuid() });
+  task.addMessage({ event: 'cancel', action: 'test', msgId: uuid() });
   task.getResult().catch(() => t.pass());
 });
 
@@ -180,11 +179,11 @@ test('getResult(): getting result from cancelled or failed task with default', a
 
   const task = new Task();
   const expectedResult = `result_${uuid()}`;
-  task.addMessage({ event: 'cancel', action: 'test', id: uuid() });
+  task.addMessage({ event: 'cancel', action: 'test', msgId: uuid() });
   t.is(await task.getResult(expectedResult), expectedResult, 'Should return default on cancelled task.');
 
   const task2 = new Task();
   const expectedResult2 = `result_${uuid()}`;
-  task2.addMessage({ event: 'fail', action: 'test', id: uuid() });
+  task2.addMessage({ event: 'fail', action: 'test', msgId: uuid() });
   t.is(await task2.getResult(expectedResult2), expectedResult2, 'Should return default on failed task.');
 });

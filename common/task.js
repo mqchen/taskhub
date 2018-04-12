@@ -1,20 +1,31 @@
-/* eslint class-methods-use-this: "off" */
 /* eslint no-labels: "off" */
 /* eslint-env es6 */
+const uuid = require('uuid/v4');
 
 const EventEmitter = require('event-emitter');
 
-const PROPS = ['action', 'event', 'id', 'payload', 'result'];
-const EVENTS = ['init', 'start', 'pickup', 'update', 'drop', 'complete', 'fail', 'cancel', 'end'];
+const EVENTS_AND_PROPS = {
+  init: ['action', 'payload'],
+  start: [],
+  pickup: [],
+  update: ['update'],
+  drop: [],
+  complete: ['result'],
+  fail: [],
+  cancel: [],
+  end: []
+};
 
 class Task {
-  constructor() {
+  constructor(id) {
+    const _id = id || uuid();
+    Object.defineProperty(this, 'id', { value: _id, writable: false });
     this._payload = null;
     this._result = null;
     this._state = null;
     this._messages = [];
     this._events = {};
-    EVENTS.forEach((event) => { this._events[event] = []; });
+    Object.keys(EVENTS_AND_PROPS).forEach((event) => { this._events[event] = []; });
 
     // Setup emitter
     this._setupEmitter();
@@ -28,13 +39,16 @@ class Task {
     });
   }
 
-  validateMessage(msg) {
-    if (typeof msg !== 'object') throw new TypeError('Messages must be JSON.');
-    if (!PROPS.every(key => Object.prototype.hasOwnProperty.call(msg, key))) {
-      throw new TypeError('Messages must have props: action, payload, event, id.');
+  static validateMessage(msg) {
+    if (typeof msg !== 'object') throw new TypeError('Messages must be objects.');
+    if (!['msgId', 'event'].every(key => Object.prototype.hasOwnProperty.call(msg, key))) {
+      throw new TypeError('Messages must at least have props \'msgId\' and \'event\' to validate.');
     }
-    if (!EVENTS.includes(msg.event)) {
-      throw new RangeError(`Unsupported event in message: '${msg.event}'.`);
+    if (!Object.prototype.hasOwnProperty.call(EVENTS_AND_PROPS, msg.event)) {
+      throw new RangeError(`Message has unsupported event: '${msg.event}'. Supported events: ${Object.keys(EVENTS_AND_PROPS).join(', ')}`);
+    }
+    if (!EVENTS_AND_PROPS[msg.event].every(key => Object.prototype.hasOwnProperty.call(msg, key))) {
+      throw new TypeError(`Messages of event '${msg.event}' must have props: ${EVENTS_AND_PROPS[msg.event].join(', ')}`);
     }
     return true;
   }
@@ -91,29 +105,19 @@ class Task {
   addMessage(rawMsg) {
     const msg = Object.assign({}, rawMsg);
 
-    // Payload and result is optional
-    if (!msg.payload) msg.payload = null;
-    if (!msg.result) msg.result = null;
+    if (!Task.validateMessage(msg)) return false;
 
-    if (!this.validateMessage(msg)) return false;
-
-    if (this._messages.find(m => m.id === msg.id)) {
+    if (this._messages.find(m => m.msgId === msg.msgId)) {
       throw Error('Message with same ID has already been added.');
     }
 
     // Remove unncessary props
-    const okMsg = {};
-    PROPS.forEach((prop) => { okMsg[prop] = msg[prop]; });
+    const okMsg = { msgId: msg.msgId, event: msg.event };
+    EVENTS_AND_PROPS[msg.event].forEach((prop) => { okMsg[prop] = msg[prop]; });
 
-    switch (okMsg.event) {
-      case 'init':
-        if (okMsg.payload) this._payload = okMsg.payload;
-        break;
-      case 'complete':
-        if (okMsg.result) this._result = okMsg.result;
-        break;
-      default:
-    }
+    // Update task
+    if (okMsg.payload) this._payload = okMsg.payload;
+    if (okMsg.result) this._result = okMsg.result;
 
     this._messages.push(okMsg);
     this._setState(okMsg.event);
