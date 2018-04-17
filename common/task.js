@@ -10,9 +10,8 @@ const EVENTS_AND_PROPS = {
   pickup: [],
   update: ['update'],
   drop: [],
-  complete: ['result'],
-  fail: [],
-  cancel: [],
+  success: ['result'],
+  fail: ['reason'],
   end: []
 };
 
@@ -70,19 +69,15 @@ class Task {
       case 'drop':
         if (!this.hasHappened('pickup')) this._setState('pickup', now);
         break;
-      case 'complete':
+      case 'success':
         if (!this.hasHappened('start')) this._setState('start', now);
         break;
       case 'fail':
         if (!this.hasHappened('start')) this._setState('start', now);
         break;
-      case 'cancel':
-        if (!this.hasHappened('start')) this._setState('start', now);
-        break;
       case 'end':
-        if (!this.hasHappened('complete') && !this.hasHappened('cancel')) {
-          this._setState('fail', now);
-          this._setState('cancel', now);
+        if (!this.hasHappened('success') && !this.hasHappened('fail')) {
+          this._setState('success');
         }
         break;
       default: return false;
@@ -138,18 +133,16 @@ class Task {
       if (def) return Promise.resolve(def);
       return Promise.reject();
     };
-    if (this.hasHappened('cancel')) return rej();
     if (this.hasHappened('fail')) return rej();
-    if (this.hasHappened('complete')) return Promise.resolve(this._result);
+    if (this.hasHappened('success')) return Promise.resolve(this._result);
 
     return new Promise((resolve, reject) => {
       const rej2 = () => {
         if (def) return resolve(def);
         return reject();
       };
-      this.once('cancel', rej2);
       this.once('fail', rej2);
-      this.once('complete', () => resolve(this._result));
+      this.once('success', () => resolve(this._result));
     });
   }
 }

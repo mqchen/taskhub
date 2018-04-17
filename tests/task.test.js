@@ -19,22 +19,27 @@ test('setting state and lifecycle logic', (t) => {
   t.true(task2.hasHappened('pickup'), 'Setting update should implicitly have set pickup.');
   t.true(task2.hasHappened('start'), 'Setting pickup should implicitly have set start.');
   t.true(task2.hasHappened('init'), 'Setting start should implicitly have set init.');
-  t.false(task2.hasHappened('complete', 'Setting update should not set complete.'));
+  t.false(task2.hasHappened('success', 'Setting update should not set complete.'));
 
   task2._setState('end');
-  t.true(task2.hasHappened('cancel'), 'Setting end without complete implicitly sets cancel.');
-  t.false(task2.hasHappened('complete'), 'Setting end without complete should not set complete.');
+  t.true(task2.hasHappened('success'), 'Setting end without success should be considered success.');
 
   const task3 = new Task();
-  task3._setState('complete');
+  task3._setState('success');
   t.true(task3.hasHappened('start'));
-  t.true(task3.hasHappened('complete'));
+  t.true(task3.hasHappened('success'));
 
   const task4 = new Task();
   task4._setState('fail');
   t.true(task4.hasHappened('start'));
   t.true(task4.hasHappened('fail'));
-  t.false(task4.hasHappened('complete'));
+  t.false(task4.hasHappened('success'));
+
+  const task5 = new Task();
+  task5._setState('end');
+  t.true(task5.hasHappened('end'));
+  t.false(task5.hasHappened('fail', 'Ending a new task does not implicitly mean failed'));
+  t.true(task5.hasHappened('success', 'Ending a new task does not implicitly mean failed'));
 });
 
 test('validateMessage()', (t) => {
@@ -55,11 +60,22 @@ test('validateMessage()', (t) => {
     Task.validateMessage(badMsg3);
   }, RangeError);
 
-  ['init', 'start', 'pickup', 'update', 'drop', 'complete', 'cancel', 'end'].forEach((event) => {
-    const goodMsg = { action: 'something', payload: null, result: null, msgId: 'x', update: null, event };
-    t.notThrows(() => {
-      t.true(Task.validateMessage(goodMsg));
-    });
+
+  const EVENTS_AND_PROPS = {
+    init: ['action', 'payload'],
+    start: [],
+    pickup: [],
+    update: ['update'],
+    drop: [],
+    success: ['result'],
+    fail: ['reason'],
+    end: []
+  };
+
+  Object.keys(EVENTS_AND_PROPS).forEach((event) => {
+    const goodMsg = { msgId: uuid(), event };
+    EVENTS_AND_PROPS[event].forEach((prop) => { goodMsg[prop] = `test_${Math.random()}`; });
+    t.notThrows(() => { t.true(Task.validateMessage(goodMsg)); });
   });
 });
 
@@ -143,7 +159,7 @@ test('should be able to add listeneres that are triggered by state changes', asy
   task.on('start', (argTask) => {
     t.is(argTask, task, 'Listeneres should be called with task object.');
   });
-  task.on('cancel', (argTask) => {
+  task.on('success', (argTask) => {
     t.is(argTask, task, 'Listeneres should be called with task object.');
   });
   task._setState('end');
@@ -160,17 +176,17 @@ test('getResult(): should resolve when complete event has been triggered', async
   task.getResult().then((result) => {
     t.is(result, expectedResult, 'Should be the result from the message');
   });
-  task.addMessage({ event: 'complete', action: 'something', result: expectedResult, msgId: uuid() });
+  task.addMessage({ event: 'success', action: 'something', result: expectedResult, msgId: uuid() });
 
   t.is(await task.getResult(), expectedResult, 'Getting result from completed task should return it immediately.');
 
   await wait(10); // Make sure everything has time to run
 });
 
-test('getResult(): getting from cancelled task without default should throw exception', async (t) => {
+test('getResult(): getting from failed task without default should throw exception', async (t) => {
   t.plan(1);
   const task = new Task();
-  task.addMessage({ event: 'cancel', action: 'test', msgId: uuid() });
+  task.addMessage({ event: 'fail', reason: 'no reason...', action: 'test', msgId: uuid() });
   task.getResult().catch(() => t.pass());
 });
 
@@ -179,11 +195,11 @@ test('getResult(): getting result from cancelled or failed task with default', a
 
   const task = new Task();
   const expectedResult = `result_${uuid()}`;
-  task.addMessage({ event: 'cancel', action: 'test', msgId: uuid() });
+  task.addMessage({ event: 'fail', reason: 'no reason...', action: 'test', msgId: uuid() });
   t.is(await task.getResult(expectedResult), expectedResult, 'Should return default on cancelled task.');
 
   const task2 = new Task();
   const expectedResult2 = `result_${uuid()}`;
-  task2.addMessage({ event: 'fail', action: 'test', msgId: uuid() });
+  task2.addMessage({ event: 'fail', reason: 'no reason...', action: 'test', msgId: uuid() });
   t.is(await task2.getResult(expectedResult2), expectedResult2, 'Should return default on failed task.');
 });

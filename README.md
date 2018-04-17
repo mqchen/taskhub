@@ -10,9 +10,9 @@ PubSubHub - Send it tasks, watch as they happen.
   - `update`: A service updates all other subbing services about an update.
   - `drop`: A service is done working on it without returning a result.
   - *return*: A service has returned a result, and thereby completed the task globally.
-- `complete`: A service has completed and returned a result. Task is considered complete and hub sends complete event to all subbing services.
-- `cancel`: The hub or the pub cancels the task. Rarely used.
-- `end`: All subbing services have either timedout, completed or dropped, or the hub has cancelled the task.
+- `success`: A service has completed and returned a result. Task is considered complete and hub sends complete event to all subbing services.
+- `fail`: A service failed or been cancelled.
+- `end`: All subbing services have either timedout, succeeded or dropped, or the hub has cancelled/failed the task.
 
 
 # Examples
