@@ -20,7 +20,7 @@ PubSubHub - Send it tasks, watch as they happen.
 ## Server
 
 ```javascript
-import { Server } from 'taskhub';
+const hub = require('taskhub/server');
 
 const hub = new Server({
   port: 9999,
@@ -61,10 +61,7 @@ client.sub('mail:send-bulk', async (task) => {
   task.on('update', () => {});
 
   // When another service returns and thereby completes the task globally.
-  task.on('complete', () => {});
-
-  // When the hub or the pub decides to cancel the task
-  task.on('cancel', () => {});
+  task.on('success', () => {});
 
   // Done and the data is sent to the caller/publisher.
   return data;

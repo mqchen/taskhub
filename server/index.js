@@ -81,22 +81,22 @@ class Server {
   }
 
   // Send messages
-  _sendMessage(serviceName, status, obj) {
+  _sendMessage(serviceName, status, msg) {
     this._getClientsFor(serviceName).forEach((client) => {
-      this._sendMessageToClient(client, status, obj);
+      this._sendMessageToClient(client, status, msg);
     });
   }
 
-  _sendMessageToClient(client, status, obj) {
+  _sendMessageToClient(client, status, msg) {
     if (!['ok', 'error'].includes(status)) throw new RangeError('Status must be either: ok or error.');
-    client.send(JSON.stringify({ status, ...obj }));
+    client.send(JSON.stringify({ status, ...msg }));
   }
 
   // Handle messages
   _execMessage(serviceName, client, rawMsg) {
     const msg = Server._parseMessage(rawMsg);
     switch (msg.type) {
-      case 'pub': return this._execPubTask(serviceName, client, msg);
+      case 'pub': return this._execPubMessage(serviceName, client, msg);
       case 'sub': return this._execSubAction(serviceName, client, msg);
       default:
         throw new TypeError(`Unsupported message type: ${msg.type}`);
@@ -128,8 +128,8 @@ class Server {
   }
 
 
-  // Publish tasks
-  _execPubTask(serviceName, client, msg) {
+  // Publish messages
+  _execPubMessage(serviceName, client, msg) {
     if (!ServerTask.validateMessage(msg)) return;
 
     const task = this.tasks[msg.id] || new ServerTask(msg.id, msg.action, msg.payload);

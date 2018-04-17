@@ -8,12 +8,10 @@ async function wait(ms) {
 
 test('setting state and lifecycle logic', (t) => {
   const task1 = new Task();
-
   t.true(task1._setState('init'));
   t.is(task1.getState(), 'init');
 
   const task2 = new Task();
-
   t.true(task2._setState('update'));
   t.is(task2.getState(), 'update');
   t.true(task2.hasHappened('pickup'), 'Setting update should implicitly have set pickup.');
@@ -37,9 +35,11 @@ test('setting state and lifecycle logic', (t) => {
 
   const task5 = new Task();
   task5._setState('end');
+  t.true(task5.hasHappened('init'));
+  t.true(task5.hasHappened('start'));
   t.true(task5.hasHappened('end'));
+  t.true(task5.hasHappened('success', 'Ending a new task means it succeeded'));
   t.false(task5.hasHappened('fail', 'Ending a new task does not implicitly mean failed'));
-  t.true(task5.hasHappened('success', 'Ending a new task does not implicitly mean failed'));
 });
 
 test('validateMessage()', (t) => {
@@ -100,7 +100,7 @@ test('addMessage(): should prevent duplicate messages being added', (t) => {
 
   task.addMessage({ event: 'init', action: 'hello:world', msgId: id, payload: null });
   t.throws(() => { task.addMessage({ msgId: id, event: 'start' }); }, Error, 'Should throw when adding message of same id twice.');
-  task.addMessage({ event: 'start', action: 'hello:world', msgId: uuid() });
+  task.addMessage({ event: 'start', msgId: uuid() });
 
   t.is(task.getMessages().length, 2, 'The duplicate event should be ignored.');
 });
@@ -176,7 +176,7 @@ test('getResult(): should resolve when complete event has been triggered', async
   task.getResult().then((result) => {
     t.is(result, expectedResult, 'Should be the result from the message');
   });
-  task.addMessage({ event: 'success', action: 'something', result: expectedResult, msgId: uuid() });
+  task.addMessage({ event: 'success', result: expectedResult, msgId: uuid() });
 
   t.is(await task.getResult(), expectedResult, 'Getting result from completed task should return it immediately.');
 
@@ -186,20 +186,15 @@ test('getResult(): should resolve when complete event has been triggered', async
 test('getResult(): getting from failed task without default should throw exception', async (t) => {
   t.plan(1);
   const task = new Task();
-  task.addMessage({ event: 'fail', reason: 'no reason...', action: 'test', msgId: uuid() });
+  task.addMessage({ event: 'fail', reason: 'no reason...', msgId: uuid() });
   task.getResult().catch(() => t.pass());
 });
 
-test('getResult(): getting result from cancelled or failed task with default', async (t) => {
-  t.plan(2);
+test('getResult(): getting result from failed task with default', async (t) => {
+  t.plan(1);
 
   const task = new Task();
   const expectedResult = `result_${uuid()}`;
-  task.addMessage({ event: 'fail', reason: 'no reason...', action: 'test', msgId: uuid() });
-  t.is(await task.getResult(expectedResult), expectedResult, 'Should return default on cancelled task.');
-
-  const task2 = new Task();
-  const expectedResult2 = `result_${uuid()}`;
-  task2.addMessage({ event: 'fail', reason: 'no reason...', action: 'test', msgId: uuid() });
-  t.is(await task2.getResult(expectedResult2), expectedResult2, 'Should return default on failed task.');
+  task.addMessage({ event: 'fail', reason: 'no reason...', msgId: uuid() });
+  t.is(await task.getResult(expectedResult), expectedResult, 'Should return default on failed task.');
 });
