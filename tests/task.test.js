@@ -42,22 +42,22 @@ test('setting state and lifecycle logic', (t) => {
   t.false(task5.hasHappened('fail', 'Ending a new task does not implicitly mean failed'));
 });
 
-test('validateMessage()', (t) => {
-  t.is(typeof Task.validateMessage, 'function', 'Should have _static_ validateMessage method');
+test('validateEvent()', (t) => {
+  t.is(typeof Task.validateEvent, 'function', 'Should have _static_ validateEvent method');
 
   const badMsg1 = 'not even json';
   t.throws(() => {
-    Task.validateMessage(badMsg1);
+    Task.validateEvent(badMsg1);
   }, TypeError);
 
   const badMsg2 = { json: 'but missing', mandatory: 'fields' };
   t.throws(() => {
-    Task.validateMessage(badMsg2);
+    Task.validateEvent(badMsg2);
   }, TypeError);
 
-  const badMsg3 = { action: 'something', payload: null, result: null, msgId: 'x', event: 'UNSUPPORTED EVENT' };
+  const badMsg3 = { action: 'something', payload: null, result: null, eventId: 'x', event: 'UNSUPPORTED EVENT' };
   t.throws(() => {
-    Task.validateMessage(badMsg3);
+    Task.validateEvent(badMsg3);
   }, RangeError);
 
 
@@ -73,58 +73,58 @@ test('validateMessage()', (t) => {
   };
 
   Object.keys(EVENTS_AND_PROPS).forEach((event) => {
-    const goodMsg = { msgId: uuid(), event };
+    const goodMsg = { eventId: uuid(), event };
     EVENTS_AND_PROPS[event].forEach((prop) => { goodMsg[prop] = `test_${Math.random()}`; });
-    t.notThrows(() => { t.true(Task.validateMessage(goodMsg)); });
+    t.notThrows(() => { t.true(Task.validateEvent(goodMsg)); });
   });
 });
 
-test('getMessages()', (t) => {
+test('getEvents()', (t) => {
   const task = new Task();
-  t.is(typeof task.getMessages, 'function');
-  t.deepEqual(task.getMessages(), []);
+  t.is(typeof task.getEvents, 'function');
+  t.deepEqual(task.getEvents(), []);
 });
 
-test('addMessage()', (t) => {
+test('addEvent()', (t) => {
   const task = new Task();
-  t.is(typeof task.addMessage, 'function', 'Should have addMessage method.');
+  t.is(typeof task.addEvent, 'function', 'Should have addEvent method.');
 
-  t.truthy(task.addMessage({ action: 'hello:world', msgId: uuid(), event: 'init', payload: null }), 'Should be able to add without the optional props: payload and result');
+  t.truthy(task.addEvent({ action: 'hello:world', eventId: uuid(), event: 'init', payload: null }), 'Should be able to add without the optional props: payload and result');
 });
 
-test('addMessage(): should prevent duplicate messages being added', (t) => {
+test('addEvent(): should prevent duplicate messages being added', (t) => {
   const task = new Task();
-  t.is(typeof task.addMessage, 'function', 'Should have addMessage method.');
+  t.is(typeof task.addEvent, 'function', 'Should have addEvent method.');
 
   const id = uuid();
 
-  task.addMessage({ event: 'init', action: 'hello:world', msgId: id, payload: null });
-  t.throws(() => { task.addMessage({ msgId: id, event: 'start' }); }, Error, 'Should throw when adding message of same id twice.');
-  task.addMessage({ event: 'start', msgId: uuid() });
+  task.addEvent({ event: 'init', action: 'hello:world', eventId: id, payload: null });
+  t.throws(() => { task.addEvent({ eventId: id, event: 'start' }); }, Error, 'Should throw when adding message of same id twice.');
+  task.addEvent({ event: 'start', eventId: uuid() });
 
-  t.is(task.getMessages().length, 2, 'The duplicate event should be ignored.');
+  t.is(task.getEvents().length, 2, 'The duplicate event should be ignored.');
 });
 
-test('addMessage(): should exclude unnecessary props from messages.', (t) => {
+test('addEvent(): should exclude unnecessary props from messages.', (t) => {
   const task = new Task();
 
-  const bloatedMsg = { action: 'hello:world', payload: null, msgId: uuid(), event: 'init', something: 'else' };
+  const bloatedMsg = { action: 'hello:world', payload: null, eventId: uuid(), event: 'init', something: 'else' };
   const expectedMsg = { ...bloatedMsg };
   delete expectedMsg.something;
 
-  task.addMessage(bloatedMsg);
-  t.deepEqual(task.getMessages(), [expectedMsg], 'Should only have the whitelisted props.');
+  task.addEvent(bloatedMsg);
+  t.deepEqual(task.getEvents(), [expectedMsg], 'Should only have the whitelisted props.');
 });
 
-test('getMessages(): should return copies of messages', (t) => {
+test('getEvents(): should return copies of messages', (t) => {
   const task = new Task();
 
   const id = uuid();
-  const msg = { action: 'hello:world', msgId: id, event: 'init', payload: null };
-  task.addMessage(msg);
+  const msg = { action: 'hello:world', eventId: id, event: 'init', payload: null };
+  task.addEvent(msg);
 
-  t.not(task.getMessages()[0], msg, 'Should be equal but not the same object.');
-  t.deepEqual(task.getMessages(), [msg], 'Should be equal.');
+  t.not(task.getEvents()[0], msg, 'Should be equal but not the same object.');
+  t.deepEqual(task.getEvents(), [msg], 'Should be equal.');
 });
 
 test('getPayload()', async (t) => {
@@ -132,13 +132,13 @@ test('getPayload()', async (t) => {
 
   t.is(typeof task.getPayload, 'function');
 
-  const msg1 = { action: 'a', msgId: uuid(), payload: { foo: 'bar' }, event: 'init' };
-  task.addMessage(msg1);
+  const msg1 = { action: 'a', eventId: uuid(), payload: { foo: 'bar' }, event: 'init' };
+  task.addEvent(msg1);
 
   t.not(await task.getPayload(), msg1.payload);
   t.deepEqual(await task.getPayload(), msg1.payload);
 
-  task.addMessage({ ...msg1, msgId: uuid(), payload: null });
+  task.addEvent({ ...msg1, eventId: uuid(), payload: null });
   t.not(await task.getPayload(), null, 'Events without payloads should not overwrite the payload.');
 });
 
@@ -176,7 +176,7 @@ test('getResult(): should resolve when complete event has been triggered', async
   task.getResult().then((result) => {
     t.is(result, expectedResult, 'Should be the result from the message');
   });
-  task.addMessage({ event: 'success', result: expectedResult, msgId: uuid() });
+  task.addEvent({ event: 'success', result: expectedResult, eventId: uuid() });
 
   t.is(await task.getResult(), expectedResult, 'Getting result from completed task should return it immediately.');
 
@@ -186,7 +186,7 @@ test('getResult(): should resolve when complete event has been triggered', async
 test('getResult(): getting from failed task without default should throw exception', async (t) => {
   t.plan(1);
   const task = new Task();
-  task.addMessage({ event: 'fail', reason: 'no reason...', msgId: uuid() });
+  task.addEvent({ event: 'fail', reason: 'no reason...', eventId: uuid() });
   task.getResult().catch(() => t.pass());
 });
 
@@ -195,6 +195,6 @@ test('getResult(): getting result from failed task with default', async (t) => {
 
   const task = new Task();
   const expectedResult = `result_${uuid()}`;
-  task.addMessage({ event: 'fail', reason: 'no reason...', msgId: uuid() });
+  task.addEvent({ event: 'fail', reason: 'no reason...', eventId: uuid() });
   t.is(await task.getResult(expectedResult), expectedResult, 'Should return default on failed task.');
 });

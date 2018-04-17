@@ -88,7 +88,7 @@ class Server {
   }
 
   _sendMessageToClient(client, status, msg) {
-    if (!['ok', 'error'].includes(status)) throw new RangeError('Status must be either: ok or error.');
+    if (!['ok', 'error'].includes(status)) throw new RangeError('Status must be either ok or error.');
     client.send(JSON.stringify({ status, ...msg }));
   }
 
@@ -113,12 +113,12 @@ class Server {
 
 
   // Subscribe tasks
-  _execSubAction(serviceName, client, msg) {
+  _execSubAction(serviceName, fromClient, msg) {
     if (!Object.prototype.hasOwnProperty.call(msg, 'action')) {
       throw new TypeError('Sub messages must have props: action.');
     }
     this._addSub(msg.action, serviceName);
-    this._sendMessageToClient(client, 'ok', { message: `Client subscribed to ${msg.action}.` });
+    this._sendMessageToClient(fromClient, 'ok', { message: `Client subscribed to ${msg.action}.` });
   }
 
   _addSub(action, serviceName) {

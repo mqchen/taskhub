@@ -22,9 +22,9 @@ class Task {
     this._payload = null;
     this._result = null;
     this._state = null;
-    this._messages = [];
-    this._events = {};
-    Object.keys(EVENTS_AND_PROPS).forEach((event) => { this._events[event] = []; });
+    this._eventMessages = [];
+    this._eventTimestamps = {};
+    Object.keys(EVENTS_AND_PROPS).forEach((event) => { this._eventTimestamps[event] = []; });
 
     // Setup emitter
     this._setupEmitter();
@@ -38,24 +38,25 @@ class Task {
     });
   }
 
-  static validateMessage(msg) {
-    if (typeof msg !== 'object') throw new TypeError('Messages must be objects.');
-    if (!['msgId', 'event'].every(key => Object.prototype.hasOwnProperty.call(msg, key))) {
-      throw new TypeError('Messages must at least have props \'msgId\' and \'event\' to validate.');
+  static validateEvent(event) {
+    if (typeof event !== 'object') throw new TypeError('Event messages must be objects.');
+    if (!['eventId', 'event'].every(key => Object.prototype.hasOwnProperty.call(event, key))) {
+      throw new TypeError('Messages must at least have props \'eventId\' and \'event\' to validate.');
     }
-    if (!Object.prototype.hasOwnProperty.call(EVENTS_AND_PROPS, msg.event)) {
-      throw new RangeError(`Message has unsupported event: '${msg.event}'. Supported events: ${Object.keys(EVENTS_AND_PROPS).join(', ')}`);
+    if (!Object.prototype.hasOwnProperty.call(EVENTS_AND_PROPS, event.event)) {
+      throw new RangeError(`Event message has unsupported event: '${event.event}'. Supported events: ${Object.keys(EVENTS_AND_PROPS).join(', ')}`);
     }
-    if (!EVENTS_AND_PROPS[msg.event].every(key => Object.prototype.hasOwnProperty.call(msg, key))) {
-      throw new TypeError(`Messages of event '${msg.event}' must have props: ${EVENTS_AND_PROPS[msg.event].join(', ')}`);
+    if (!EVENTS_AND_PROPS[event.event]
+      .every(key => Object.prototype.hasOwnProperty.call(event, key))) {
+      throw new TypeError(`Event messages of event '${event.event}' must have props: ${EVENTS_AND_PROPS[event.event].join(', ')}`);
     }
     return true;
   }
 
-  _setState(event, time) {
+  _setState(state, time) {
     const now = time || Date.now();
 
-    switch (event) {
+    switch (state) {
       case 'init': break;
       case 'start':
         if (!this.hasHappened('init')) this._setState('init', now);
@@ -83,45 +84,45 @@ class Task {
       default: return false;
     }
 
-    this._state = event;
-    this._events[event].push(now);
-    this._emitter.emit(event, this);
+    this._state = state;
+    this._eventTimestamps[state].push(now);
+    this._emitter.emit(state, this);
     return true;
   }
 
-  hasHappened(event) {
-    return this._events[event].length > 0;
+  hasHappened(state) {
+    return this._eventTimestamps[state].length > 0;
   }
 
   getState() {
     return this._state;
   }
 
-  addMessage(rawMsg) {
+  addEvent(rawMsg) {
     const msg = Object.assign({}, rawMsg);
 
-    if (!Task.validateMessage(msg)) return false;
+    if (!Task.validateEvent(msg)) return false;
 
-    if (this._messages.find(m => m.msgId === msg.msgId)) {
+    if (this._eventMessages.find(m => m.eventId === msg.eventId)) {
       throw Error('Message with same ID has already been added.');
     }
 
     // Remove unncessary props
-    const okMsg = { msgId: msg.msgId, event: msg.event };
+    const okMsg = { eventId: msg.eventId, event: msg.event };
     EVENTS_AND_PROPS[msg.event].forEach((prop) => { okMsg[prop] = msg[prop]; });
 
     // Update task
     if (okMsg.payload) this._payload = okMsg.payload;
     if (okMsg.result) this._result = okMsg.result;
 
-    this._messages.push(okMsg);
+    this._eventMessages.push(okMsg);
     this._setState(okMsg.event);
 
     return true;
   }
 
-  getMessages() {
-    return this._messages.map(a => ({ ...a })); // Return a copy of messages
+  getEvents() {
+    return this._eventMessages.map(a => ({ ...a })); // Return a copy of messages
   }
 
   async getPayload() {
