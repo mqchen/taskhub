@@ -19,6 +19,7 @@ class Task {
   constructor(id) {
     const _id = id || uuid();
     Object.defineProperty(this, 'id', { value: _id, writable: false });
+    this._action = null;
     this._payload = null;
     this._result = null;
     this._state = null;
@@ -28,6 +29,14 @@ class Task {
 
     // Setup emitter
     this._setupEmitter();
+  }
+
+  get action() {
+    return this._action;
+  }
+
+  get state() {
+    return this._state;
   }
 
   _setupEmitter() {
@@ -94,10 +103,6 @@ class Task {
     return this._eventTimestamps[state].length > 0;
   }
 
-  getState() {
-    return this._state;
-  }
-
   addEvent(rawMsg) {
     const msg = Object.assign({}, rawMsg);
 
@@ -111,7 +116,8 @@ class Task {
     const okMsg = { eventId: msg.eventId, event: msg.event };
     EVENTS_AND_PROPS[msg.event].forEach((prop) => { okMsg[prop] = msg[prop]; });
 
-    // Update task
+    // Update task (EVENTS_AND_PROPS decides if these get to update or not)
+    if (okMsg.action) this._action = okMsg.action;
     if (okMsg.payload) this._payload = okMsg.payload;
     if (okMsg.result) this._result = okMsg.result;
 
@@ -121,8 +127,12 @@ class Task {
     return true;
   }
 
-  getEvents() {
+  get events() {
     return this._eventMessages.map(a => ({ ...a })); // Return a copy of messages
+  }
+
+  getLastEvent() {
+    return this._eventMessages.slice(-1)[0];
   }
 
   async getPayload() {

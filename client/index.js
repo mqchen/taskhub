@@ -1,6 +1,7 @@
 const WebSocket = require('ws');
 const uuid = require('uuid/v4');
 const ClientTask = require('./ClientTask');
+const MemoryTaskStore = require('../common/stores/memory');
 
 class Client {
   constructor(url, service, key) {
@@ -11,6 +12,7 @@ class Client {
     this.ws.on('message', this._processMessage.bind(this));
     this.subs = {};
     this.tasks = {};
+    this.taskStore = new MemoryTaskStore();
     this.logger = console;
   }
 
@@ -25,18 +27,20 @@ class Client {
   _processMessage(data) {
     this.logger.log('Message received:', data);
     const msg = JSON.parse(data);
-    this._findSubs(msg.action).forEach((callback) => { callback.call(null, msg); });
+    // this._findSubs(msg.action).forEach((callback) => { callback.call(null, msg); });
   }
 
   isOpen() {
     return this.ws.readyState === WebSocket.OPEN;
   }
 
-  pub(action, payload) {
-    const id = uuid();
-    this.ws.send(JSON.stringify({ type: 'pub', action, payload: payload || null, id, event: 'init' }));
-    this.tasks[id] = new ClientTask(this, action, payload);
-    return this.tasks[id];
+  pub(action, inputPayload) {
+    const payload = inputPayload || null;
+    const eventId = uuid();
+    const taskId = uuid();
+    this.ws.send(JSON.stringify({ cmd: 'pub', event: 'init', action, payload, eventId, taskId }));
+    this.tasks[taskId] = new ClientTask(taskId, this);
+    return this.tasks[taskId];
   }
 
   _findSubs(action) {
@@ -47,7 +51,7 @@ class Client {
     if (!this.subs[action]) this.subs[action] = [];
     this.subs[action].push(callback);
 
-    this.ws.send(JSON.stringify({ type: 'sub', action }));
+    this.ws.send(JSON.stringify({ cmd: 'sub', action }));
   }
 }
 

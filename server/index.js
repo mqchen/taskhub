@@ -1,7 +1,8 @@
 /* eslint class-methods-use-this: ["error", { "exceptMethods": ["_sendMessageToClient"] }] */
 
 const WebSocket = require('ws');
-const ServerTask = require('./ServerTask');
+const Task = require('../common/task');
+const MemoryTaskStore = require('../common/stores/memory');
 
 class Server {
   constructor(opts) {
@@ -19,13 +20,14 @@ class Server {
     // subs
     this.subs = {};
     // Task store, will be moved to Redis or MongoDB in the future
-    this.tasks = {};
+    this.tasks = {}; // tmp
+    this.taskStore = new MemoryTaskStore();
   }
 
   start() {
     this.server = new WebSocket.Server(this.opts);
     this.logger.info('Starting server at:', this.server.address().port);
-    this.server.on('connection', this._initClient.bind(this));
+    this.server.on('connection', (...args) => this._initClient(...args));
     this.address = this.server.address();
     return this.address;
   }
@@ -72,7 +74,7 @@ class Server {
     // Register events
     client.on('message', (data) => {
       try {
-        this._execMessage(serviceName, client, data);
+        this._execCommand(serviceName, client, data);
       } catch (e) {
         this.logger.log('Invalid message:', e.message, data);
         this._sendMessageToClient(client, 'error', { error: e.name, message: e.message, request: data });
@@ -93,27 +95,27 @@ class Server {
   }
 
   // Handle messages
-  _execMessage(serviceName, client, rawMsg) {
-    const msg = Server._parseMessage(rawMsg);
-    switch (msg.type) {
-      case 'pub': return this._execPubMessage(serviceName, client, msg);
-      case 'sub': return this._execSubAction(serviceName, client, msg);
+  _execCommand(serviceName, client, rawMsg) {
+    const msg = Server._parseCommand(rawMsg);
+    switch (msg.cmd) {
+      case 'pub': return this._execPubCmd(serviceName, client, msg);
+      case 'sub': return this._execSubCmd(serviceName, client, msg);
       default:
-        throw new TypeError(`Unsupported message type: ${msg.type}`);
+        throw new TypeError(`Unsupported message cmd: ${msg.cmd}`);
     }
   }
 
-  static _parseMessage(rawData) {
+  static _parseCommand(rawData) {
     const json = JSON.parse(rawData);
-    if (!json.type) {
-      throw new TypeError('Missing message type.');
+    if (!json.cmd) {
+      throw new TypeError('Missing message command (prop: cmd).');
     }
     return json;
   }
 
 
   // Subscribe tasks
-  _execSubAction(serviceName, fromClient, msg) {
+  _execSubCmd(serviceName, fromClient, msg) {
     if (!Object.prototype.hasOwnProperty.call(msg, 'action')) {
       throw new TypeError('Sub messages must have props: action.');
     }
@@ -129,22 +131,31 @@ class Server {
 
 
   // Publish messages
-  _execPubMessage(serviceName, client, msg) {
-    if (!ServerTask.validateMessage(msg)) return;
+  _execPubCmd(serviceName, client, msg) {
+    if (!Object.prototype.hasOwnProperty.call(msg, 'taskId')) {
+      throw new TypeError('Pub messages must have props: taskId.');
+    }
+    if (!Task.validateEvent(msg)) return; // It throws which is caught outside
 
-    const task = this.tasks[msg.id] || new ServerTask(msg.id, msg.action, msg.payload);
-    task.addMessage(msg);
+    (async () => {
+      // Get or create task from taskStore
+      let task = await this.taskStore.get(msg.taskId);
+      if (!task) {
+        task = new Task(msg.taskId);
+        this.taskStore.add(task);
+      }
 
-    this._findSubs(msg.action).forEach((subService) => {
-      this._sendMessage(subService, 'ok', {
-        id: msg.id,
-        action: task.action,
-        payload: task.payload,
-        event: task.lastEvent,
-        result: task.result
+      // Add event to task
+      task.addEvent(msg);
+      this.taskStore.update(task);
+
+      // Broadcast
+      this._findSubs(task.action).forEach((subService) => {
+        this._sendMessage(subService, 'ok', task.getLastEvent());
       });
-    });
+    }).call(this);
   }
+
   _findSubs(action) {
     return this.subs[action] || [];
   }

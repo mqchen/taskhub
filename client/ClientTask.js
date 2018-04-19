@@ -1,26 +1,17 @@
+const Task = require('../common/task');
 
-class ClientTask {
-  constructor(client, action, payload) {
+class ClientTask extends Task {
+  constructor(id, client) {
+    super(id);
     this.client = client;
-    this.action = action;
-    this.payload = payload;
-    this.result = null;
   }
 
-  // TODO
-  async getPayload() {}
+  // TODO: needs to send event messages
   pickup() {}
   drop() {}
   update() {}
-  complete() {}
-
-  on() {}
-  off() {}
-  once() {}
-
-  async getResult() {
-    return this.result;
-  }
+  success() {}
+  fail() {}
 }
 
 module.exports = ClientTask;

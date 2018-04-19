@@ -85,14 +85,14 @@ test('Invalid message returns error message', async (t) => {
   t.is(reply.error, 'TypeError');
   t.deepEqual(reply.request, msg2);
 
-  const msg3 = JSON.stringify({ type: 'invalid type' });
+  const msg3 = JSON.stringify({ cmd: 'invalid type' });
   ws.send(msg3);
   reply = await oneResponse(ws);
   t.is(reply.status, 'error');
   t.is(reply.error, 'TypeError');
   t.deepEqual(reply.request, msg3);
 
-  const msg4 = JSON.stringify({ type: 'pub', action: '', payload: {}, id: uuid(), event: 'invalid event' });
+  const msg4 = JSON.stringify({ cmd: 'pub', action: '', payload: {}, taskId: uuid(), eventId: uuid(), event: 'invalid event' });
   ws.send(msg4);
   reply = await oneResponse(ws);
   t.is(reply.status, 'error');
@@ -105,13 +105,13 @@ test('Sub message should add subscriber, and a Pub msg should trigger it', async
   const ws2 = await createConnection(t);
   const action = `test-service:method_${Math.random()}`;
 
-  ws1.send(JSON.stringify({ type: 'sub', action }));
+  ws1.send(JSON.stringify({ cmd: 'sub', action }));
   const reply = await oneResponse(ws1);
 
   t.is(reply.status, 'ok');
   t.is(t.context.hub._findSubs(action).length, 1, 'Should add something in subs.');
 
-  ws2.send(JSON.stringify({ type: 'pub', action, payload: {}, id: uuid(), event: 'init' }));
+  ws2.send(JSON.stringify({ cmd: 'pub', action, payload: {}, taskId: uuid(), eventId: uuid(), event: 'init' }));
   const reply2 = await oneResponse(ws1);
 
   t.is(reply2.status, 'ok');
@@ -123,18 +123,17 @@ test('Complete msg should update subscribers with result', async (t) => {
   const ws2 = await createConnection(t);
   const action = `test-service:method_${Math.random()}`;
   const result = `result_${Math.random()}`;
-  const taskId = uuid();
+  // const taskId = uuid();
+  const taskId = 'carmex';
 
-  ws1.send(JSON.stringify({ type: 'sub', action }));
+  ws1.send(JSON.stringify({ cmd: 'sub', action }));
   await oneResponse(ws1); // Pop
 
-  ws2.send(JSON.stringify({ type: 'pub', action, payload: {}, id: taskId, event: 'init' }));
-
+  ws2.send(JSON.stringify({ cmd: 'pub', event: 'init', action, payload: {}, taskId, eventId: uuid() }));
   const reply1 = await oneResponse(ws1);
-  t.is(reply1.result, null);
+  t.is(reply1.event, 'init');
 
-  ws2.send(JSON.stringify({ type: 'pub', action, payload: {}, id: taskId, event: 'complete', result }));
-
+  ws2.send(JSON.stringify({ cmd: 'pub', event: 'success', result, taskId, eventId: uuid() }));
   const reply3 = await oneResponse(ws1);
   t.is(reply3.result, result);
 });

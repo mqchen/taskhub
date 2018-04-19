@@ -2,6 +2,14 @@
 
 PubSubHub - Send it tasks, watch as they happen.
 
+# Vocabulary
+
+- `action`: A category of tasks. Example of actions can be: "mail:send", "geo:geocode", "validate:email"
+- `task`: An instance of an `action`, like a job.
+- `event`: An event that updates the state of a task. See task lifecycle for complete event reference
+- `command`: Messages sent to the hub. Either "pub" or "sub"
+- `message`: Messages sent from the hub to the clients.
+
 # Task lifecycle
 
 - `init`: A client asks to start this event

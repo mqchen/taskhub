@@ -9,11 +9,11 @@ async function wait(ms) {
 test('setting state and lifecycle logic', (t) => {
   const task1 = new Task();
   t.true(task1._setState('init'));
-  t.is(task1.getState(), 'init');
+  t.is(task1.state, 'init');
 
   const task2 = new Task();
   t.true(task2._setState('update'));
-  t.is(task2.getState(), 'update');
+  t.is(task2.state, 'update');
   t.true(task2.hasHappened('pickup'), 'Setting update should implicitly have set pickup.');
   t.true(task2.hasHappened('start'), 'Setting pickup should implicitly have set start.');
   t.true(task2.hasHappened('init'), 'Setting start should implicitly have set init.');
@@ -79,10 +79,9 @@ test('validateEvent()', (t) => {
   });
 });
 
-test('getEvents()', (t) => {
+test('get events()', (t) => {
   const task = new Task();
-  t.is(typeof task.getEvents, 'function');
-  t.deepEqual(task.getEvents(), []);
+  t.deepEqual(task.events, []);
 });
 
 test('addEvent()', (t) => {
@@ -102,7 +101,7 @@ test('addEvent(): should prevent duplicate messages being added', (t) => {
   t.throws(() => { task.addEvent({ eventId: id, event: 'start' }); }, Error, 'Should throw when adding message of same id twice.');
   task.addEvent({ event: 'start', eventId: uuid() });
 
-  t.is(task.getEvents().length, 2, 'The duplicate event should be ignored.');
+  t.is(task.events.length, 2, 'The duplicate event should be ignored.');
 });
 
 test('addEvent(): should exclude unnecessary props from messages.', (t) => {
@@ -113,7 +112,7 @@ test('addEvent(): should exclude unnecessary props from messages.', (t) => {
   delete expectedMsg.something;
 
   task.addEvent(bloatedMsg);
-  t.deepEqual(task.getEvents(), [expectedMsg], 'Should only have the whitelisted props.');
+  t.deepEqual(task.events, [expectedMsg], 'Should only have the whitelisted props.');
 });
 
 test('getEvents(): should return copies of messages', (t) => {
@@ -123,8 +122,8 @@ test('getEvents(): should return copies of messages', (t) => {
   const msg = { action: 'hello:world', eventId: id, event: 'init', payload: null };
   task.addEvent(msg);
 
-  t.not(task.getEvents()[0], msg, 'Should be equal but not the same object.');
-  t.deepEqual(task.getEvents(), [msg], 'Should be equal.');
+  t.not(task.events[0], msg, 'Should be equal but not the same object.');
+  t.deepEqual(task.events, [msg], 'Should be equal.');
 });
 
 test('getPayload()', async (t) => {

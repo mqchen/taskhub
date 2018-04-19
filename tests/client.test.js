@@ -12,7 +12,7 @@ async function createClient(t) {
     t.context.serviceName,
     t.context.creds.key);
   client.logger = { ...client.logger,
-    log: () => {},
+    // log: () => {},
     info: () => {} }; // Mute log
   return client;
 }
@@ -37,22 +37,23 @@ test('Create new Client should auto connect', async (t) => {
   t.true(t.context.client.isOpen());
 });
 
-test('Basic task posting without expecting anything', async (t) => {
-  const client = t.context.client;
-  const task = client.pub('a-service:test-action', { thisIsThePayload: 'some data' });
-  t.true(task instanceof Client.Task);
-});
-
-test('Subs should be called on Pubs', async (t) => {
-  t.plan(2);
-  const client = t.context.client;
-  client.sub('test:action', () => t.pass('Called'));
-  client.sub('test:action', () => t.pass('Also called'));
-  client.sub('test:action', () => {}); // Noop
-  client.sub('test:another-action', () => t.fail('Should not be called'));
-  client.pub('test:action');
-  await wait(50); // wait for it to get a change to run
-});
+// test('Basic task posting without expecting anything', async (t) => {
+//   const client = t.context.client;
+//   const payload = { thisIsThePayload: 'some data' };
+//   const task = client.pub('a-service:test-action', payload);
+//   t.is(async task.getPayload(), payload);
+// });
+//
+// test('Subs should be called on Pubs', async (t) => {
+//   t.plan(2);
+//   const client = t.context.client;
+//   client.sub('test:action', () => t.pass('Called'));
+//   client.sub('test:action', () => t.pass('Also called'));
+//   client.sub('test:action', () => {}); // Noop
+//   client.sub('test:another-action', () => t.fail('Should not be called'));
+//   client.pub('test:action');
+//   await wait(50); // wait for it to get a change to run
+// });
 
 // test('Post task and get reply', async (t) => {
 //   const client = t.context.client;
