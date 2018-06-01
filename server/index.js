@@ -1,6 +1,7 @@
 /* eslint class-methods-use-this: ["error", { "exceptMethods": ["_sendMessageToClient"] }] */
 
 const WebSocket = require('ws');
+const chalk = require('chalk');
 const Task = require('../common/task');
 const MemoryTaskStore = require('../common/stores/memory');
 
@@ -20,13 +21,12 @@ class Server {
     // subs
     this.subs = {};
     // Task store, will be moved to Redis or MongoDB in the future
-    this.tasks = {}; // tmp
     this.taskStore = new MemoryTaskStore();
   }
 
   start() {
     this.server = new WebSocket.Server(this.opts);
-    this.logger.info('Starting server at:', this.server.address().port);
+    this.logger.info(chalk.green('Starting server at:'), this.server.address().port);
     this.server.on('connection', (...args) => this._initClient(...args));
     this.address = this.server.address();
     return this.address;
@@ -41,7 +41,7 @@ class Server {
   }
 
   addCredential(service, creds) {
-    this.logger.log(`Credentials added for '${service}' service.`);
+    this.logger.log(chalk.gray(`Credentials added for '${service}' service.`));
     this.credentials[service] = creds;
   }
 
@@ -76,7 +76,7 @@ class Server {
       try {
         this._execCommand(serviceName, client, data);
       } catch (e) {
-        this.logger.log('Invalid message:', e.message, data);
+        this.logger.log(chalk.yellow('Invalid message:'), e.message, data);
         this._sendMessageToClient(client, 'error', { error: e.name, message: e.message, request: data });
       }
     });
@@ -84,6 +84,7 @@ class Server {
 
   // Send messages
   _sendMessage(serviceName, status, msg) {
+    this.logger.log(chalk.blue(`Sending ${status} message to '${serviceName}'.`), msg);
     this._getClientsFor(serviceName).forEach((client) => {
       this._sendMessageToClient(client, status, msg);
     });
@@ -127,6 +128,7 @@ class Server {
     if (!this.subs[action]) this.subs[action] = [];
     if (this.subs[action].includes(serviceName)) return;
     this.subs[action].push(serviceName);
+    this.logger.info(chalk.blue(`'${serviceName}' is now subscribed to action: ${action}.`));
   }
 
 
@@ -141,7 +143,7 @@ class Server {
       // Get or create task from taskStore
       let task = await this.taskStore.get(msg.taskId);
       if (!task) {
-        task = new Task(msg.taskId);
+        task = new Task(msg.taskId, serviceName);
         this.taskStore.add(task);
       }
 
@@ -149,8 +151,10 @@ class Server {
       task.addEvent(msg);
       this.taskStore.update(task);
 
-      // Broadcast
-      this._findSubs(task.action).forEach((subService) => {
+      // Broadcast to all subs and the from service
+      const broadcastTo = this._findSubs(task.action);
+      broadcastTo.push(task.fromService);
+      broadcastTo.forEach((subService) => {
         this._sendMessage(subService, 'ok', task.getLastEvent());
       });
     }).call(this);

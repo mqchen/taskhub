@@ -123,8 +123,7 @@ test('Complete msg should update subscribers with result', async (t) => {
   const ws2 = await createConnection(t);
   const action = `test-service:method_${Math.random()}`;
   const result = `result_${Math.random()}`;
-  // const taskId = uuid();
-  const taskId = 'carmex';
+  const taskId = uuid();
 
   ws1.send(JSON.stringify({ cmd: 'sub', action }));
   await oneResponse(ws1); // Pop
@@ -136,6 +135,32 @@ test('Complete msg should update subscribers with result', async (t) => {
   ws2.send(JSON.stringify({ cmd: 'pub', event: 'success', result, taskId, eventId: uuid() }));
   const reply3 = await oneResponse(ws1);
   t.is(reply3.result, result);
+});
+
+test('The client that publishes a task should be updated when its own tasks are updated, regardless of sub.', async (t) => {
+  const ws1 = await createConnection(t);
+  const ws2 = await createConnection(t);
+  const action1 = `test-service:method_${Math.random()}`;
+  const action2 = `test-service:method_${Math.random()}`;
+  const result = `result_${Math.random()}`;
+  const taskId = uuid();
+
+  ws1.send(JSON.stringify({ cmd: 'sub', action: action1 }));
+  await oneResponse(ws1); // Pop
+
+  ws2.send(JSON.stringify({ cmd: 'sub', action: action2 }));
+  await oneResponse(ws2); // Pop
+
+  // WS2 sends an event about 'action1' which WS2 is not subscribed to
+  // Since WS2 sent it, it should get all events about it's task
+  ws2.send(JSON.stringify({ cmd: 'pub', event: 'init', action: action1, payload: {}, taskId, eventId: uuid() }));
+  await oneResponse(ws1); // Pop
+  const reply1 = await oneResponse(ws2);
+  t.is(reply1.event, 'init'); // WS2 should get the event about it's task even though it is not subbed to action1
+
+  ws1.send(JSON.stringify({ cmd: 'pub', event: 'success', result, taskId, eventId: uuid() }));
+  const reply2 = await oneResponse(ws2);
+  t.is(reply2.event, 'success'); // WS2 should get the event about it's task even though it is not subbed to action1
 });
 
 // Impossible to catch an async exception... and impossible to prevent ws from throwing

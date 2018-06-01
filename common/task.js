@@ -16,9 +16,10 @@ const EVENTS_AND_PROPS = {
 };
 
 class Task {
-  constructor(id) {
+  constructor(id, fromService) {
     const _id = id || uuid();
     Object.defineProperty(this, 'id', { value: _id, writable: false });
+    this._fromService = fromService;
     this._action = null;
     this._payload = null;
     this._result = null;
@@ -37,6 +38,10 @@ class Task {
 
   get state() {
     return this._state;
+  }
+
+  get fromService() {
+    return this._fromService;
   }
 
   _setupEmitter() {
@@ -132,7 +137,7 @@ class Task {
   }
 
   getLastEvent() {
-    return this._eventMessages.slice(-1)[0];
+    return { ...this._eventMessages.slice(-1)[0], taskId: this.id };
   }
 
   async getPayload() {
