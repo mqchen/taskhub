@@ -7,7 +7,6 @@ const EventEmitter = require('event-emitter');
 const EVENTS_AND_PROPS = {
   init: ['action', 'payload'],
   start: [],
-  pickup: [],
   update: ['update'],
   drop: [],
   success: ['result'],
@@ -82,14 +81,11 @@ class Task {
       case 'start':
         if (!this.hasHappened('init')) this._setState('init', now);
         break;
-      case 'pickup':
+      case 'update':
         if (!this.hasHappened('start')) this._setState('start', now);
         break;
-      case 'update':
-        if (!this.hasHappened('pickup')) this._setState('pickup', now);
-        break;
       case 'drop':
-        if (!this.hasHappened('pickup')) this._setState('pickup', now);
+        if (!this.hasHappened('start')) this._setState('start', now);
         break;
       case 'success':
         if (!this.hasHappened('start')) this._setState('start', now);

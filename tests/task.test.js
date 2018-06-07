@@ -14,8 +14,7 @@ test('setting state and lifecycle logic', (t) => {
   const task2 = new Task();
   t.true(task2._setState('update'));
   t.is(task2.state, 'update');
-  t.true(task2.hasHappened('pickup'), 'Setting update should implicitly have set pickup.');
-  t.true(task2.hasHappened('start'), 'Setting pickup should implicitly have set start.');
+  t.true(task2.hasHappened('start'), 'Setting update should implicitly have set start.');
   t.true(task2.hasHappened('init'), 'Setting start should implicitly have set init.');
   t.false(task2.hasHappened('success', 'Setting update should not set complete.'));
 
@@ -64,7 +63,6 @@ test('validateEvent()', (t) => {
   const EVENTS_AND_PROPS = {
     init: ['action', 'payload'],
     start: [],
-    pickup: [],
     update: ['update'],
     drop: [],
     success: ['result'],
@@ -203,7 +201,7 @@ test('on() and once(): adding a listener to an event that has happened should be
   const task = new Task();
   task.addEvent({ action: 'hello:world', eventId: uuid(), event: 'init', payload: null });
   task.on('init', () => { t.pass(); });
-  task.addEvent({ eventId: uuid(), event: 'pickup' });
+  task.addEvent({ eventId: uuid(), event: 'start' });
   task.once('init', () => { t.pass(); });
   task.on('start', () => { t.pass(); });
 });
