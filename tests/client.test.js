@@ -12,7 +12,12 @@ Client.defaultLogger = new winston.Logger({
   transports: [new (winston.transports.Console)()]
 });
 Client.defaultLogger.cli();
-Server.defaultLogger = Client.defaultLogger;
+
+Server.defaultLogger = new winston.Logger({
+  level: 'debug',
+  transports: [new (winston.transports.Console)()]
+});
+Server.defaultLogger.cli();
 
 
 async function createClient(t) {
@@ -40,17 +45,35 @@ test('Create new Client should auto connect', async (t) => {
   t.true(t.context.client.isOpen());
 });
 
-test('Publish new task', async (t) => {
-  t.plan(4);
+test('Publish new task and go through lifecycle', async (t) => {
+  t.plan(9);
   const client = t.context.client;
   const payload = { a: 'payload here' };
   const action = `action_${Math.random()}`;
   const task = await client.pub(action, payload);
-  task.on('init', () => { t.pass('Task created = task initialized. Initialized event should have occurred.'); });
-  task.on('start', () => { t.fail('Creating task does not mean it has started.'); });
+  task.on('init', async (paramTask) => {
+    t.pass(t.deepEqual(await paramTask.getPayload(), payload)); // counts as 2 assertions...
+    t.pass('Task created = initialized. Initialized event should have occurred.');
+  });
+  const shouldNotStartNow = () => { t.fail('Creating task does not mean it has started.'); };
+  task.on('start', shouldNotStartNow);
+
   t.is(task.action, action);
   t.deepEqual(await task.getPayload(), payload);
   t.is(task.state, 'init');
+
+  // Start
+  task.off('start', shouldNotStartNow);
+  task.start();
+  task.once('start', () => { t.pass(); });
+
+  // update
+  // TODO: update data should be passed to the listener
+  task.on('update', () => { t.pass(); });
+  task.update({ data: 'foo' });
+  task.update({ data: 'bar' });
+
+  await wait(50);
 });
 
 // test('Basic task posting without expecting anything', async (t) => {

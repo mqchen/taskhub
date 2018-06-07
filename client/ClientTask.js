@@ -1,4 +1,5 @@
 const Task = require('../common/task');
+const uuid = require('uuid/v4');
 
 class ClientTask extends Task {
   constructor(id, client) {
@@ -6,10 +7,22 @@ class ClientTask extends Task {
     this.client = client;
   }
 
-  // TODO: needs to send event messages
-  pickup() {}
-  drop() {}
-  update() {}
+  sendEvent(event, other) {
+    this.client.sendMessage({ cmd: 'pub', event, eventId: uuid(), taskId: this.id, ...other });
+  }
+
+  start() {
+    this.sendEvent('start');
+  }
+
+  update(update) {
+    this.sendEvent('update', { update });
+  }
+
+  drop() {
+    this.sendEvent('drop');
+  }
+
   success() {}
   fail() {}
 }

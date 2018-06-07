@@ -36,7 +36,7 @@ class Client {
     const msg = JSON.parse(data);
     (async () => {
       const task = await this.taskStore.get(msg.taskId);
-      if (!task) this.logger.warn(chalk.yellow('Received an event beloging to unknown task. Ignoring it. Probably a bug in the Server.'));
+      if (!task) this.logger.warn(chalk.yellow('Received an event belonging to unknown task. Ignoring it. Probably a bug in the Server.'));
       else {
         task.addEvent(msg);
         // const callbacks = this._findSubs(msg.action);
@@ -44,6 +44,10 @@ class Client {
         // callbacks.forEach((callback) => { callback.call(null, msg); });
       }
     }).call(this);
+  }
+
+  sendMessage(data) {
+    this.ws.send(JSON.stringify(data));
   }
 
   /*
@@ -58,7 +62,7 @@ class Client {
     const promise = new Promise((resolve) => {
       task.once('init', () => { resolve(task); });
     });
-    this.ws.send(JSON.stringify({ cmd: 'pub', event: 'init', action, payload, eventId, taskId }));
+    this.sendMessage({ cmd: 'pub', event: 'init', action, payload, eventId, taskId });
     return promise;
   }
 
@@ -70,7 +74,7 @@ class Client {
     if (!this.subs[action]) this.subs[action] = [];
     this.subs[action].push(callback);
 
-    this.ws.send(JSON.stringify({ cmd: 'sub', action }));
+    this.sendMessage({ cmd: 'sub', action });
   }
 }
 

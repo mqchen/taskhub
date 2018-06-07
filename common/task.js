@@ -45,12 +45,12 @@ class Task {
   }
 
   on(...args) {
-    if (this.hasHappened(args[0])) return args[1].call();
+    if (this.hasHappened(args[0])) return args[1].call(this, this);
     return this._emitter.on(...args);
   }
 
   once(...args) {
-    if (this.hasHappened(args[0])) return args[1].call();
+    if (this.hasHappened(args[0])) return args[1].call(this, this);
     return this._emitter.once(...args);
   }
 
