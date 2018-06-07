@@ -11,7 +11,7 @@ class Server {
       port: 8080,
       verifyClient: this._verfyClient.bind(this)
     };
-    this.logger = console;
+    this.logger = Server.defaultLogger;
     this.opts = { ...defaultOpts, ...opts };
     this.server = null;
     this.address = null;
@@ -84,7 +84,7 @@ class Server {
 
   // Send messages
   _sendMessage(serviceName, status, msg) {
-    this.logger.info(chalk.blue(`Sending ${status} message to '${serviceName}'.`), msg);
+    this.logger.info(chalk.gray(`Sending ${status} message to '${serviceName}'.`), msg);
     this._getClientsFor(serviceName).forEach((client) => {
       this._sendMessageToClient(client, status, msg);
     });
@@ -128,7 +128,7 @@ class Server {
     if (!this.subs[action]) this.subs[action] = [];
     if (this.subs[action].includes(serviceName)) return;
     this.subs[action].push(serviceName);
-    this.logger.info(chalk.blue(`'${serviceName}' is now subscribed to action: ${action}.`));
+    this.logger.info(`'${serviceName}' is now subscribed to action: ${action}.`);
   }
 
 
@@ -164,5 +164,7 @@ class Server {
     return this.subs[action] || [];
   }
 }
+
+Server.defaultLogger = console;
 
 module.exports = Server;

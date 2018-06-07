@@ -197,3 +197,13 @@ test('getResult(): getting result from failed task with default', async (t) => {
   task.addEvent({ event: 'fail', reason: 'no reason...', eventId: uuid() });
   t.is(await task.getResult(expectedResult), expectedResult, 'Should return default on failed task.');
 });
+
+test('on() and once(): adding a listener to an event that has happened should be triggered immediately.', async (t) => {
+  t.plan(3);
+  const task = new Task();
+  task.addEvent({ action: 'hello:world', eventId: uuid(), event: 'init', payload: null });
+  task.on('init', () => { t.pass(); });
+  task.addEvent({ eventId: uuid(), event: 'pickup' });
+  task.once('init', () => { t.pass(); });
+  task.on('start', () => { t.pass(); });
+});

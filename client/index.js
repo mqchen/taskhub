@@ -11,12 +11,12 @@ class Client {
       headers: { service, key }
     });
     this.ws.on('message', this._processMessage.bind(this));
-    this.ws.on('open', () => this.logger.log(chalk.green('Client online.')));
-    this.ws.on('close', () => this.logger.log(chalk.red('Client offline.')));
+    this.ws.on('open', () => this.logger.info(chalk.green('Client online.')));
+    this.ws.on('close', () => this.logger.info(chalk.red('Client offline.')));
     this.subs = {};
     this.tasks = {};
     this.taskStore = new MemoryTaskStore();
-    this.logger = console;
+    this.logger = Client.defaultLogger;
   }
 
   static async create(url, service, key) {
@@ -32,17 +32,17 @@ class Client {
   }
 
   _processMessage(data) {
-    this.logger.log(chalk.green('Message received:'), data);
+    this.logger.info(chalk.green('Message received:'), data);
     const msg = JSON.parse(data);
-    console.log(msg);
     (async () => {
       const task = await this.taskStore.get(msg.taskId);
-
-      if (!task) return this.logger.warn(chalk.yellow('Got an event beloging to unknown task.'));
-
-      const callbacks = this._findSubs(msg.action);
-      callbacks.push(task.fromCallback);
-      callbacks.forEach((callback) => { callback.call(null, msg); });
+      if (!task) this.logger.warn(chalk.yellow('Received an event beloging to unknown task. Ignoring it. Probably a bug in the Server.'));
+      else {
+        task.addEvent(msg);
+        // const callbacks = this._findSubs(msg.action);
+        // callbacks.push(task.fromCallback);
+        // callbacks.forEach((callback) => { callback.call(null, msg); });
+      }
     }).call(this);
   }
 
@@ -54,10 +54,9 @@ class Client {
     const eventId = uuid();
     const taskId = uuid();
     const task = new ClientTask(taskId, this);
-    console.log('TASKID', taskId);
     this.taskStore.add(task);
     const promise = new Promise((resolve) => {
-      task.once('init', () => { resolve(task); console.log('resolved?'); });
+      task.once('init', () => { resolve(task); });
     });
     this.ws.send(JSON.stringify({ cmd: 'pub', event: 'init', action, payload, eventId, taskId }));
     return promise;
@@ -74,6 +73,8 @@ class Client {
     this.ws.send(JSON.stringify({ cmd: 'sub', action }));
   }
 }
+
+Client.defaultLogger = console;
 
 Client.Task = ClientTask;
 

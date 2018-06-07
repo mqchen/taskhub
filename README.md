@@ -12,8 +12,8 @@ PubSubHub - Send it tasks, watch as they happen.
 
 # Task lifecycle
 
-- `init`: A client asks to start this event
-- `start`: A task has been received by the hub and will be sent to subbing services.
+- `init`: A client asks to start this task.
+- `start`: A task has been received by the hub and has been sent to subbing services. Event is triggered when at least one has picked it up.
   - `pickup`: A service subbing to this task type has picked it up and started work on it.
   - `update`: A service updates all other subbing services about an update.
   - `drop`: A service is done working on it without returning a result.

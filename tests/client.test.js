@@ -1,4 +1,5 @@
 const test = require('ava');
+const winston = require('winston');
 const Client = require('../client');
 const Server = require('../server');
 
@@ -6,24 +7,24 @@ async function wait(ms) {
   return new Promise((resolve) => { setTimeout(() => resolve(), ms); });
 }
 
+Client.defaultLogger = new winston.Logger({
+  level: 'debug',
+  transports: [new (winston.transports.Console)()]
+});
+Client.defaultLogger.cli();
+Server.defaultLogger = Client.defaultLogger;
+
+
 async function createClient(t) {
   const client = await Client.create(
     `ws://localhost:${t.context.hub.address.port}`,
     t.context.serviceName,
     t.context.creds.key);
-  client.logger = { ...client.logger,
-    log: () => {},
-    info: () => {}
-  }; // Mute log
   return client;
 }
 
 test.beforeEach(async (t) => {
   t.context.hub = new Server({ port: 0 });
-  t.context.hub.logger = { ...t.context.hub.logger,
-    log: () => {},
-    info: () => {}
-  }; // Mute log
   t.context.creds = { key: `password: ${Math.random()}` };
   t.context.serviceName = `test_${Math.random()}`;
   t.context.hub.addCredential(t.context.serviceName, t.context.creds);
@@ -39,15 +40,18 @@ test('Create new Client should auto connect', async (t) => {
   t.true(t.context.client.isOpen());
 });
 
-// test('Publish new task', async (t) => {
-//   const client = t.context.client;
-//   const payload = { a: 'payload here' };
-//   const action = `action_${Math.random()}`;
-//   const task = await client.pub(action, payload);
-//   t.is(task.action, action);
-//   t.is(await task.getPayload(), payload);
-//   t.is(task.state, 'init');
-// });
+test('Publish new task', async (t) => {
+  t.plan(4);
+  const client = t.context.client;
+  const payload = { a: 'payload here' };
+  const action = `action_${Math.random()}`;
+  const task = await client.pub(action, payload);
+  task.on('init', () => { t.pass('Task created = task initialized. Initialized event should have occurred.'); });
+  task.on('start', () => { t.fail('Creating task does not mean it has started.'); });
+  t.is(task.action, action);
+  t.deepEqual(await task.getPayload(), payload);
+  t.is(task.state, 'init');
+});
 
 // test('Basic task posting without expecting anything', async (t) => {
 //   const client = t.context.client;

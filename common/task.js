@@ -29,7 +29,8 @@ class Task {
     Object.keys(EVENTS_AND_PROPS).forEach((event) => { this._eventTimestamps[event] = []; });
 
     // Setup emitter
-    this._setupEmitter();
+    this._emitter = EventEmitter();
+    // this._setupEmitter();
   }
 
   get action() {
@@ -44,12 +45,18 @@ class Task {
     return this._fromService;
   }
 
-  _setupEmitter() {
-    this._emitter = () => {};
-    EventEmitter(this._emitter);
-    ['on', 'off', 'once'].forEach((method) => {
-      this[method] = (...args) => this._emitter[method](...args);
-    });
+  on(...args) {
+    if (this.hasHappened(args[0])) return args[1].call();
+    return this._emitter.on(...args);
+  }
+
+  once(...args) {
+    if (this.hasHappened(args[0])) return args[1].call();
+    return this._emitter.once(...args);
+  }
+
+  off(...args) {
+    return this._emitter.off(...args);
   }
 
   static validateEvent(event) {
