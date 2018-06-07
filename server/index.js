@@ -41,7 +41,7 @@ class Server {
   }
 
   addCredential(service, creds) {
-    this.logger.log(chalk.gray(`Credentials added for '${service}' service.`));
+    this.logger.info(chalk.gray(`Credentials added for '${service}' service.`));
     this.credentials[service] = creds;
   }
 
@@ -76,7 +76,7 @@ class Server {
       try {
         this._execCommand(serviceName, client, data);
       } catch (e) {
-        this.logger.log(chalk.yellow('Invalid message:'), e.message, data);
+        this.logger.info(chalk.yellow('Invalid message:'), e.message, data);
         this._sendMessageToClient(client, 'error', { error: e.name, message: e.message, request: data });
       }
     });
@@ -84,7 +84,7 @@ class Server {
 
   // Send messages
   _sendMessage(serviceName, status, msg) {
-    this.logger.log(chalk.blue(`Sending ${status} message to '${serviceName}'.`), msg);
+    this.logger.info(chalk.blue(`Sending ${status} message to '${serviceName}'.`), msg);
     this._getClientsFor(serviceName).forEach((client) => {
       this._sendMessageToClient(client, status, msg);
     });

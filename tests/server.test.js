@@ -1,13 +1,16 @@
 const test = require('ava');
 const Server = require('../server');
+const winston = require('winston');
 const WebSocket = require('ws');
 const uuid = require('uuid/v4');
 
 test.beforeEach((t) => {
   t.context.hub = new Server({ port: 0 });
-  t.context.hub.logger = { ...t.context.hub.logger,
-    log: () => {},
-    info: () => {} }; // Mute log
+  t.context.hub.logger = new winston.Logger({
+    level: 'debug',
+    transports: [new (winston.transports.Console)()]
+  });
+  t.context.hub.logger.cli();
   t.context.creds = { key: `password: ${Math.random()}` };
   t.context.serviceName = `test_${Math.random()}`;
   t.context.hub.addCredential(t.context.serviceName, t.context.creds);
