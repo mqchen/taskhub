@@ -14,9 +14,16 @@ hub.addCredential(config.service, {
 });
 
 (async () => {
-  const client = await TaskHub.Client.create(`ws://localhost:${config.port}`);
+  const client = await TaskHub.Client.create(`ws://localhost:${config.port}`, config.service, config.key);
   client.sub('test:echo', async (task) => {
-    console.log(await task.getPayload());
+    console.log('test:echo', await task.getPayload());
+  });
+  client.sub('test:rand', async (task) => {
+    const payload = await task.getPayload();
+    const min = parseFloat(payload.min) || 0;
+    const max = parseFloat(payload.max) || 100;
+    const rand = Math.floor(Math.random() * ((max - min) + 1)) + min;
+    console.log('test:rand', `'${rand}' is a random int between ${min} and ${max}.`);
   });
 })();
 
