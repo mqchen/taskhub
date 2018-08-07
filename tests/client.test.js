@@ -83,16 +83,16 @@ test('Basic task posting without expecting anything', async (t) => {
   t.deepEqual(await task.getPayload(), payload);
 });
 
-// test('Subs should be called on Pubs', async (t) => {
-//   t.plan(2);
-//   const client = t.context.client;
-//   client.sub('test:action', () => t.pass('Called'));
-//   client.sub('test:action', () => t.pass('Also called'));
-//   client.sub('test:action', () => {}); // Noop
-//   client.sub('test:another-action', () => t.fail('Should not be called'));
-//   console.log(await client.pub('test:action'));
-//   await wait(50); // wait for it to get a change to run
-// });
+test('Subs should be called on Pubs', async (t) => {
+  t.plan(2);
+  const client = t.context.client;
+  client.sub('test:action', () => t.pass('Called'));
+  client.sub('test:action', () => t.pass('Also called'));
+  client.sub('test:action', () => {}); // Noop
+  client.sub('test:another-action', () => t.fail('Should not be called'));
+  await client.pub('test:action');
+  await wait(50); // wait for it to get a change to run
+});
 
 // test('Post task and get reply', async (t) => {
 //   const client = t.context.client;

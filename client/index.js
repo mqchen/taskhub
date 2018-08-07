@@ -39,9 +39,8 @@ class Client {
       if (!task) this.logger.warn(chalk.yellow('Received an event belonging to unknown task. Ignoring it. Probably a bug in the Server.'));
       else {
         task.addEvent(msg);
-        // const callbacks = this._findSubs(msg.action);
-        // callbacks.push(task.fromCallback);
-        // callbacks.forEach((callback) => { callback.call(null, msg); });
+        const callbacks = this._findSubs(msg.action);
+        callbacks.forEach((callback) => { callback.call(null, msg); });
       }
     }).call(this);
   }
