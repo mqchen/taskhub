@@ -117,7 +117,7 @@ class Task {
     if (!Task.validateEvent(msg)) return false;
 
     if (this._eventMessages.find(m => m.eventId === msg.eventId)) {
-      throw Error('Message with same ID has already been added.');
+      throw Error(`Message with same ID has already been added. ${JSON.stringify(msg)}`);
     }
 
     // Remove unncessary props

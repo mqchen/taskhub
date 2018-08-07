@@ -151,9 +151,9 @@ class Server {
       task.addEvent(msg);
       this.taskStore.update(task);
 
-      // Broadcast to all subs and the from service
+      // Broadcast to all subs and the from-service
       const broadcastTo = this._findSubs(task.action);
-      broadcastTo.push(task.fromService);
+      if (!broadcastTo.includes(task.fromService)) broadcastTo.push(task.fromService);
       broadcastTo.forEach((subService) => {
         this._sendMessage(subService, 'ok', task.getLastEvent());
       });

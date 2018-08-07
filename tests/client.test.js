@@ -76,13 +76,13 @@ test('Publish new task and go through lifecycle', async (t) => {
   await wait(50);
 });
 
-// test('Basic task posting without expecting anything', async (t) => {
-//   const client = t.context.client;
-//   const payload = { thisIsThePayload: 'some data' };
-//   const task = client.pub('a-service:test-action', payload);
-//   t.is(async task.getPayload(), payload);
-// });
-//
+test('Basic task posting without expecting anything', async (t) => {
+  const client = t.context.client;
+  const payload = { thisIsThePayload: 'some data' };
+  const task = await client.pub('a-service:test-action', payload);
+  t.deepEqual(await task.getPayload(), payload);
+});
+
 // test('Subs should be called on Pubs', async (t) => {
 //   t.plan(2);
 //   const client = t.context.client;
@@ -90,7 +90,7 @@ test('Publish new task and go through lifecycle', async (t) => {
 //   client.sub('test:action', () => t.pass('Also called'));
 //   client.sub('test:action', () => {}); // Noop
 //   client.sub('test:another-action', () => t.fail('Should not be called'));
-//   client.pub('test:action');
+//   console.log(await client.pub('test:action'));
 //   await wait(50); // wait for it to get a change to run
 // });
 
