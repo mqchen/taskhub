@@ -185,6 +185,8 @@ test('getResult(): getting from failed task without default should throw excepti
   const task = new Task();
   task.addEvent({ event: 'fail', reason: 'no reason...', eventId: uuid() });
   task.getResult().catch(() => t.pass());
+
+  await wait(10); // Make sure everything has time to run
 });
 
 test('getResult(): getting result from failed task with default', async (t) => {

@@ -61,3 +61,6 @@ build
 
 # Google Cloud Platform
 gcp-keyfile.json
+
+# OpeNode config
+.openode
