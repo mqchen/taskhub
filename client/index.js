@@ -40,7 +40,7 @@ class Client {
       else {
         task.addEvent(msg);
         const callbacks = this._findSubs(msg.action);
-        callbacks.forEach((callback) => { callback.call(null, msg); });
+        callbacks.forEach((callback) => { callback.call(null, task); });
       }
     }).call(this);
   }

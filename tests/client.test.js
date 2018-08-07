@@ -94,6 +94,18 @@ test('Subs should be called on Pubs', async (t) => {
   await wait(50); // wait for it to get a change to run
 });
 
+test('Subs should be called with Task object, with access to payload.', async (t) => {
+  t.plan(1);
+  const client = t.context.client;
+  const payload = { thisIsThePayload: 'some data', random: Math.random() };
+
+  client.sub('test:action', async (task) => {
+    t.deepEqual(await task.getPayload(), payload);
+  });
+  await client.pub('test:action', payload);
+  await wait(50);
+});
+
 // test('Post task and get reply', async (t) => {
 //   const client = t.context.client;
 //
