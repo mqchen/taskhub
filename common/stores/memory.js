@@ -9,8 +9,9 @@ class MemoryTaskStore {
     return this.tasks[taskId];
   }
 
-  add(task) {
+  async add(task) {
     this.tasks[task.id] = task;
+    return task;
   }
 
   update(task) {

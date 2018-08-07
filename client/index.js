@@ -34,10 +34,17 @@ class Client {
   _processMessage(data) {
     this.logger.info(chalk.green('Message received:'), data);
     const msg = JSON.parse(data);
+    if (!msg.taskId) return;
     (async () => {
-      const task = await this.taskStore.get(msg.taskId);
-      if (!task) this.logger.warn(chalk.yellow('Received an event belonging to unknown task. Ignoring it. Probably a bug in the Server.'));
-      else {
+      let task = await this.taskStore.get(msg.taskId);
+      if (!task && msg.event === 'init') {
+        task = new ClientTask(msg.taskId, this);
+        await this.taskStore.add(task);
+      }
+
+      if (!task) {
+        this.logger.warn(chalk.yellow(`Received an event belonging to unknown task. Ignoring it. Probably a bug in the Server. (msg: ${JSON.stringify(msg)})`));
+      } else {
         task.addEvent(msg);
         const callbacks = this._findSubs(msg.action);
         callbacks.forEach((callback) => { callback.call(null, task); });

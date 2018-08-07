@@ -70,6 +70,7 @@ class Server {
     const serviceName = req.headers.service;
     if (!this.clients[serviceName]) this.clients[serviceName] = [];
     this._getClientsFor(serviceName).push(client);
+    this.logger.info(`New client for '${serviceName}' authenticated. Total clients of this serivice: ${this.clients[serviceName].length}`);
 
     // Register events
     client.on('message', (data) => {
@@ -153,6 +154,7 @@ class Server {
 
       // Broadcast to all subs and the from-service
       const broadcastTo = this._findSubs(task.action);
+      this.logger.info(`Broadcasting '${task.action}' to ${broadcastTo.length} service(s).`);
       if (!broadcastTo.includes(task.fromService)) broadcastTo.push(task.fromService);
       broadcastTo.forEach((subService) => {
         this._sendMessage(subService, 'ok', task.getLastEvent());
