@@ -23,8 +23,13 @@ class ClientTask extends Task {
     this.sendEvent('drop');
   }
 
-  success() {}
-  fail() {}
+  success(result) {
+    this.sendEvent('success', { result });
+  }
+
+  fail(reason) {
+    this.sendEvent('fail', { reason });
+  }
 }
 
 module.exports = ClientTask;

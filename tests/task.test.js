@@ -198,6 +198,14 @@ test('getResult(): getting result from failed task with default', async (t) => {
   t.is(await task.getResult(expectedResult), expectedResult, 'Should return default on failed task.');
 });
 
+test('getReason(): get fail reason, if task has failed', async (t) => {
+  t.plan(1);
+
+  const task = new Task();
+  task.addEvent({ event: 'fail', reason: 'some reason...', eventId: uuid() });
+  t.is(await task.getReason(), 'some reason...');
+});
+
 test('on() and once(): adding a listener to an event that has happened should be triggered immediately.', async (t) => {
   t.plan(3);
   const task = new Task();

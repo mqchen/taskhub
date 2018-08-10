@@ -22,6 +22,7 @@ class Task {
     this._action = null;
     this._payload = null;
     this._result = null;
+    this._failReason = null;
     this._state = null;
     this._eventMessages = [];
     this._eventTimestamps = {};
@@ -128,6 +129,7 @@ class Task {
     if (okMsg.action) this._action = okMsg.action;
     if (okMsg.payload) this._payload = okMsg.payload;
     if (okMsg.result) this._result = okMsg.result;
+    if (okMsg.reason) this._failReason = okMsg.reason;
 
     this._eventMessages.push(okMsg);
     this._setState(okMsg.event);
@@ -163,6 +165,10 @@ class Task {
       this.once('fail', rej2);
       this.once('success', () => resolve(this._result));
     });
+  }
+
+  async getReason() {
+    return this._failReason;
   }
 }
 
