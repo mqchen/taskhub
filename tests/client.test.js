@@ -129,3 +129,14 @@ test('When tasks fails it should provide reason', async (t) => {
   task.on('fail', async tt => t.is(await tt.getReason(), 'some reason'));
   await wait(10);
 });
+
+test('do() short-hand for pub and getResult()', async (t) => {
+  const client = t.context.client;
+
+  const result = `result_${Math.random()}`;
+  client.sub('test:payload-and-rand', async (task) => {
+    task.success(`${(await task.getPayload()).msg}-${result}`);
+  });
+
+  t.is(await client.do('test:payload-and-rand', { msg: 'payload' }), `payload-${result}`);
+});

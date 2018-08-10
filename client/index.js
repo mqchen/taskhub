@@ -1,7 +1,7 @@
 const WebSocket = require('ws');
 const uuid = require('uuid/v4');
 const chalk = require('chalk');
-const ClientTask = require('./ClientTask');
+const ClientTask = require('./clientTask');
 const MemoryTaskStore = require('../common/stores/memory');
 
 class Client {
@@ -17,6 +17,10 @@ class Client {
     this.tasks = {};
     this.taskStore = new MemoryTaskStore();
     this.logger = Client.defaultLogger;
+  }
+
+  _findSubs(action) {
+    return this.subs[action] || [];
   }
 
   static async create(url, service, key) {
@@ -72,15 +76,21 @@ class Client {
     return promise;
   }
 
-  _findSubs(action) {
-    return this.subs[action] || [];
-  }
-
+  /*
+   * Subscribe to actions.
+   */
   sub(action, callback) {
     if (!this.subs[action]) this.subs[action] = [];
     this.subs[action].push(callback);
 
     this.sendMessage({ cmd: 'sub', action });
+  }
+
+  /*
+   * Short-hand for pub and getResult.
+   */
+  async do(action, payload, defaultResult) {
+    return this.pub(action, payload).then(task => task.getResult(defaultResult));
   }
 }
 
