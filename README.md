@@ -4,11 +4,11 @@ PubSubHub - Send it tasks, watch as they happen.
 
 # Vocabulary
 
-- `action`: A category of tasks. Example of actions can be: "mail:send", "geo:geocode", "validate:email"
+- `action`: A category of tasks. Example of actions can be: "email:send", "geo:geocode", "email/address:validate". Actions are composed of: `<noun>:<verb>` or `<noun>/<sub.noun>:<verb>`
 - `task`: An instance of an `action`, like a job.
 - `event`: An event that updates the state of a task. See task lifecycle for complete event reference
-- `command`: Messages sent to the hub. Either "pub" or "sub"
-- `message`: Messages sent from the hub to the clients.
+- `command`: Messages sent to the hub. Either "pub" or "sub". Kind of like requests.
+- `message`: Messages sent from the hub to the clients. Kind of like responses.
 
 # Task lifecycle
 
@@ -53,10 +53,10 @@ const client = new Client('ws:server:port', {
   name: 'mailer' // unique name
   key: '---super-secret-key---'
 });
-client.sub('mail:send-bulk', async (task) => {
+client.sub('email/bulk:send', async (task) => {
   // Tell the hub this service will begin work on this task, so that it knows to wait.
   // Otherwise, the hub will assume a task is complete when all listening services has seen it, or timedout. (The timeout is short.)
-  task.pickup();
+  task.start();
 
   // Get payload (async because it could be large)
   const data = await task.getPayload();
@@ -71,7 +71,7 @@ client.sub('mail:send-bulk', async (task) => {
   task.on('success', () => {});
 
   // Done and the data is sent to the caller/publisher.
-  return data;
+  return data; // or task.success(result);
 
   // This service has completed but doesn't want to return a result to pub.
   task.drop();
@@ -79,15 +79,15 @@ client.sub('mail:send-bulk', async (task) => {
 
 // Calling
 try {
-  let result = await client.pub('mail:send-bulk', emails).getResult();
+  let result = await client.pub('email/bulk:send', emails).getResult();
 } catch(err) { }
 
 // Call it with value if error, to avoid the exceptions, and wait 30 min
-let result = await client.pub('mail:send-bulk', emails, 1000 * 60 * 30 /* 30 min */)
+let result = await client.pub('email/bulk:send', emails, 1000 * 60 * 30 /* 30 min */)
   .getResult(valueIfError);
 
 // Call it with progress updates
-let finalResult = await client.pub('mail:send-bulk', emails)
+let finalResult = await client.pub('email/bulk:send', emails)
   .on('update', (tmpResult) => { /* something */ })
   .getResult(valueIfError);
 ```
