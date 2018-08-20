@@ -2,6 +2,7 @@
 
 const WebSocket = require('ws');
 const chalk = require('chalk');
+const basicAuth = require('basic-auth');
 const Task = require('../common/task');
 const MemoryTaskStore = require('../common/stores/memory');
 
@@ -40,21 +41,30 @@ class Server {
     if (this.server) this.server.close();
   }
 
-  addCredential(service, creds) {
+  addCredentials(service, creds) {
     this.logger.info(chalk.gray(`Credentials added for '${service}' service.`));
     this.credentials[service] = creds;
   }
 
-  removeCredential(service) {
+  removeCredentials(service) {
     delete this.credentials[service];
   }
 
   // Verify and init clients
   _verfyClient(info, cb) {
-    const service = `${info.req.headers.service}`;
-    const key = `${info.req.headers.key}`;
+    const creds = basicAuth(info.req);
+    const service = creds && creds.name ? decodeURIComponent(creds.name) : null;
+    const key = creds && creds.pass ? decodeURIComponent(creds.pass) : null;
 
-    if (this.credentials[service] && this.credentials[service].key === key) {
+    console.log(chalk.red('Server creds: '), creds, [
+      { 'service !== null': service !== null },
+      { 'key !== null': key !== null },
+      { 'this.credentials[service]': Object.prototype.hasOwnProperty.call(this.credentials, service) },
+      { 'this.credentials[service].key': this.credentials[service] && this.credentials[service].key === key }
+    ]);
+
+    if (service !== null && key !== null
+      && this.credentials[service] && this.credentials[service].key === key) {
       cb(true);
       return;
     }
@@ -67,7 +77,9 @@ class Server {
 
   _initClient(client, req) {
     // Register client
-    const serviceName = req.headers.service;
+    const creds = basicAuth(req);
+    // const serviceName = req.headers.service;
+    const serviceName = creds.name;
     if (!this.clients[serviceName]) this.clients[serviceName] = [];
     this._getClientsFor(serviceName).push(client);
     this.logger.info(`New client for '${serviceName}' authenticated. Total clients of this serivice: ${this.clients[serviceName].length}`);

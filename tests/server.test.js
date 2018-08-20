@@ -12,9 +12,9 @@ Server.defaultLogger.cli();
 
 test.beforeEach((t) => {
   t.context.hub = new Server({ port: 0 });
-  t.context.creds = { key: `password: ${Math.random()}` };
+  t.context.creds = { key: `password_${Math.random()}` };
   t.context.serviceName = `test_${Math.random()}`;
-  t.context.hub.addCredential(t.context.serviceName, t.context.creds);
+  t.context.hub.addCredentials(t.context.serviceName, t.context.creds);
 });
 
 test.afterEach.always((t) => {
@@ -26,12 +26,7 @@ async function createConnection(t) {
     ? t.context.hub.address
     : t.context.hub.start();
   return new Promise((resolve, reject) => {
-    const ws = new WebSocket(`ws://localhost:${address.port}`, 'ws', {
-      headers: {
-        service: t.context.serviceName,
-        key: t.context.creds.key
-      }
-    });
+    const ws = new WebSocket(`ws://${t.context.serviceName}:${t.context.creds.key}@localhost:${address.port}`, 'ws');
     ws.on('open', () => resolve(ws));
     ws.on('close', () => reject(ws));
   });
@@ -56,13 +51,13 @@ test('Should export Server class', (t) => {
 });
 
 test('Can add and remove credentials', (t) => {
-  t.is(typeof t.context.hub.addCredential, 'function', 'Should expose addCredential method.');
+  t.is(typeof t.context.hub.addCredentials, 'function', 'Should expose addCredential method.');
   const creds = { key: `password: ${Math.random()}` };
   const name = `test_${Math.random()}`;
-  t.context.hub.addCredential(name, creds);
+  t.context.hub.addCredentials(name, creds);
   t.is(t.context.hub.credentials[name].key, creds.key);
 
-  t.context.hub.removeCredential(name);
+  t.context.hub.removeCredentials(name);
   t.falsy(t.context.hub.credentials[name]);
 });
 

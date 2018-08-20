@@ -1,4 +1,5 @@
 const WebSocket = require('ws');
+const URL = require('url');
 const uuid = require('uuid/v4');
 const chalk = require('chalk');
 const ClientTask = require('./clientTask');
@@ -6,10 +7,9 @@ const MemoryTaskStore = require('../common/stores/memory');
 
 class Client {
   constructor(url, service, key) {
-    this.url = url;
-    this.ws = new WebSocket(url, 'ws', {
-      headers: { service, key }
-    });
+    // Add basic auth to url:
+    this.url = URL.format({ ...URL.parse(url), auth: `${service}:${key}` });
+    this.ws = new WebSocket(this.url, 'ws');
     this.ws.on('message', this._processMessage.bind(this));
     this.ws.on('open', () => this.logger.info(chalk.green('Client online.')));
     this.ws.on('close', () => this.logger.info(chalk.red('Client offline.')));

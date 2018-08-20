@@ -30,9 +30,9 @@ async function createClient(t) {
 
 test.beforeEach(async (t) => {
   t.context.hub = new Server({ port: 0 });
-  t.context.creds = { key: `password: ${Math.random()}` };
+  t.context.creds = { key: `password_${Math.random()}` };
   t.context.serviceName = `test_${Math.random()}`;
-  t.context.hub.addCredential(t.context.serviceName, t.context.creds);
+  t.context.hub.addCredentials(t.context.serviceName, t.context.creds);
   t.context.hub.start();
   t.context.client = await createClient(t);
 });
