@@ -7,7 +7,7 @@ const config = {
 };
 
 const hub = new TaskHub.Server({ port: config.port });
-hub.addCredential(config.service, {
+hub.addCredentials(config.service, {
   key: config.key,
   // subPermissions: ['mail:send-bulk'],
   // pubPermissions: ['log:error', 'log:warn', 'log:info', 'googlemaps'],
@@ -27,7 +27,7 @@ hub.addCredential(config.service, {
   });
 })();
 
-console.log(`RUN: wscat -c localhost:${config.port} -H service:${config.service} -H key:${config.key}`);
+console.log(`RUN: wscat -c ${config.service}:${config.key}@localhost:${config.port}`);
 console.log('Available action: test:echo');
 
 hub.start();

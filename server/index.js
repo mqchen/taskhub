@@ -56,13 +56,6 @@ class Server {
     const service = creds && creds.name ? decodeURIComponent(creds.name) : null;
     const key = creds && creds.pass ? decodeURIComponent(creds.pass) : null;
 
-    console.log(chalk.red('Server creds: '), creds, [
-      { 'service !== null': service !== null },
-      { 'key !== null': key !== null },
-      { 'this.credentials[service]': Object.prototype.hasOwnProperty.call(this.credentials, service) },
-      { 'this.credentials[service].key': this.credentials[service] && this.credentials[service].key === key }
-    ]);
-
     if (service !== null && key !== null
       && this.credentials[service] && this.credentials[service].key === key) {
       cb(true);
