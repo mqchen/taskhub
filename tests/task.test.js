@@ -54,7 +54,9 @@ test('validateEvent()', (t) => {
     Task.validateEvent(badMsg2);
   }, TypeError);
 
-  const badMsg3 = { action: 'something', payload: null, result: null, eventId: 'x', event: 'UNSUPPORTED EVENT' };
+  const badMsg3 = {
+    action: 'something', payload: null, result: null, eventId: 'x', event: 'UNSUPPORTED EVENT'
+  };
   t.throws(() => {
     Task.validateEvent(badMsg3);
   }, RangeError);
@@ -86,7 +88,9 @@ test('addEvent()', (t) => {
   const task = new Task();
   t.is(typeof task.addEvent, 'function', 'Should have addEvent method.');
 
-  t.truthy(task.addEvent({ action: 'hello:world', eventId: uuid(), event: 'init', payload: null }), 'Should be able to add without the optional props: payload and result');
+  t.truthy(task.addEvent({
+    action: 'hello:world', eventId: uuid(), event: 'init', payload: null
+  }), 'Should be able to add without the optional props: payload and result');
 });
 
 test('addEvent(): should prevent duplicate messages being added', (t) => {
@@ -95,7 +99,9 @@ test('addEvent(): should prevent duplicate messages being added', (t) => {
 
   const id = uuid();
 
-  task.addEvent({ event: 'init', action: 'hello:world', eventId: id, payload: null });
+  task.addEvent({
+    event: 'init', action: 'hello:world', eventId: id, payload: null
+  });
   t.throws(() => { task.addEvent({ eventId: id, event: 'start' }); }, Error, 'Should throw when adding message of same id twice.');
   task.addEvent({ event: 'start', eventId: uuid() });
 
@@ -105,7 +111,9 @@ test('addEvent(): should prevent duplicate messages being added', (t) => {
 test('addEvent(): should exclude unnecessary props from messages.', (t) => {
   const task = new Task();
 
-  const bloatedMsg = { action: 'hello:world', payload: null, eventId: uuid(), event: 'init', something: 'else' };
+  const bloatedMsg = {
+    action: 'hello:world', payload: null, eventId: uuid(), event: 'init', something: 'else'
+  };
   const expectedMsg = { ...bloatedMsg };
   delete expectedMsg.something;
 
@@ -117,7 +125,9 @@ test('getEvents(): should return copies of messages', (t) => {
   const task = new Task();
 
   const id = uuid();
-  const msg = { action: 'hello:world', eventId: id, event: 'init', payload: null };
+  const msg = {
+    action: 'hello:world', eventId: id, event: 'init', payload: null
+  };
   task.addEvent(msg);
 
   t.not(task.events[0], msg, 'Should be equal but not the same object.');
@@ -129,7 +139,9 @@ test('getPayload()', async (t) => {
 
   t.is(typeof task.getPayload, 'function');
 
-  const msg1 = { action: 'a', eventId: uuid(), payload: { foo: 'bar' }, event: 'init' };
+  const msg1 = {
+    action: 'a', eventId: uuid(), payload: { foo: 'bar' }, event: 'init'
+  };
   task.addEvent(msg1);
 
   t.not(await task.getPayload(), msg1.payload);
@@ -209,7 +221,9 @@ test('getReason(): get fail reason, if task has failed', async (t) => {
 test('on() and once(): adding a listener to an event that has happened should be triggered immediately.', async (t) => {
   t.plan(3);
   const task = new Task();
-  task.addEvent({ action: 'hello:world', eventId: uuid(), event: 'init', payload: null });
+  task.addEvent({
+    action: 'hello:world', eventId: uuid(), event: 'init', payload: null
+  });
   task.on('init', () => { t.pass(); });
   task.addEvent({ eventId: uuid(), event: 'start' });
   task.once('init', () => { t.pass(); });

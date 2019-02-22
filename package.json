@@ -29,7 +29,7 @@
     "event-emitter": "^0.3.5",
     "url": "^0.11.0",
     "uuid": "^3.3.2",
-    "winston": "^2.4.4",
+    "winston": "^3.2.1",
     "ws": "^6.1.4"
   },
   "devDependencies": {

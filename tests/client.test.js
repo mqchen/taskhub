@@ -7,24 +7,25 @@ async function wait(ms) {
   return new Promise((resolve) => { setTimeout(() => resolve(), ms); });
 }
 
-Client.defaultLogger = new winston.Logger({
+Client.defaultLogger = winston.createLogger({
   level: 'debug',
   transports: [new (winston.transports.Console)()]
 });
-Client.defaultLogger.cli();
+Client.defaultLogger.add(new winston.transports.Console());
 
-Server.defaultLogger = new winston.Logger({
+Server.defaultLogger = winston.createLogger({
   level: 'debug',
   transports: [new (winston.transports.Console)()]
 });
-Server.defaultLogger.cli();
+Server.defaultLogger.add(new winston.transports.Console());
 
 
 async function createClient(t) {
   const client = await Client.create(
     `ws://localhost:${t.context.hub.address.port}`,
     t.context.serviceName,
-    t.context.creds.key);
+    t.context.creds.key
+  );
   return client;
 }
 
@@ -47,7 +48,7 @@ test('Create new Client should auto connect', async (t) => {
 
 test('Publish new task and go through lifecycle', async (t) => {
   t.plan(9);
-  const client = t.context.client;
+  const { client } = t.context;
   const payload = { a: 'payload here' };
   const action = `action_${Math.random()}`;
   const task = await client.pub(action, payload);
@@ -77,7 +78,7 @@ test('Publish new task and go through lifecycle', async (t) => {
 });
 
 test('Basic task posting without expecting anything', async (t) => {
-  const client = t.context.client;
+  const { client } = t.context;
   const payload = { thisIsThePayload: 'some data' };
   const task = await client.pub('a-service:test-action', payload);
   t.deepEqual(await task.getPayload(), payload);
@@ -85,7 +86,7 @@ test('Basic task posting without expecting anything', async (t) => {
 
 test('Subs should be called on Pubs', async (t) => {
   t.plan(2);
-  const client = t.context.client;
+  const { client } = t.context;
   client.sub('test:action', () => t.pass('Called'));
   client.sub('test:action', () => t.pass('Also called'));
   client.sub('test:action', () => {}); // Noop
@@ -96,7 +97,7 @@ test('Subs should be called on Pubs', async (t) => {
 
 test('Subs should be called with Task object, with access to payload.', async (t) => {
   t.plan(1);
-  const client = t.context.client;
+  const { client } = t.context;
   const payload = { thisIsThePayload: 'some data', random: Math.random() };
 
   client.sub('test:action', async (task) => {
@@ -107,7 +108,7 @@ test('Subs should be called with Task object, with access to payload.', async (t
 });
 
 test('Post task that succeeds should return result', async (t) => {
-  const client = t.context.client;
+  const { client } = t.context;
 
   const result = `result_${Math.random()}`;
   client.sub('test:test', task => task.success(result)); // This service only replies with static result.
@@ -121,7 +122,7 @@ test('Post task that succeeds should return result', async (t) => {
 
 test('When tasks fails it should provide reason', async (t) => {
   t.plan(1);
-  const client = t.context.client;
+  const { client } = t.context;
 
   client.sub('test:test', task => task.fail('some reason'));
 
@@ -131,7 +132,7 @@ test('When tasks fails it should provide reason', async (t) => {
 });
 
 test('do() short-hand for pub and getResult()', async (t) => {
-  const client = t.context.client;
+  const { client } = t.context;
 
   const result = `result_${Math.random()}`;
   client.sub('test:payload-and-rand', async (task) => {

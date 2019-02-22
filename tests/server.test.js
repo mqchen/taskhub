@@ -1,14 +1,14 @@
 const test = require('ava');
-const Server = require('../server');
 const winston = require('winston');
 const WebSocket = require('ws');
 const uuid = require('uuid/v4');
+const Server = require('../server');
 
-Server.defaultLogger = new winston.Logger({
+Server.defaultLogger = winston.createLogger({
   level: 'debug',
   transports: [new (winston.transports.Console)()]
 });
-Server.defaultLogger.cli();
+Server.defaultLogger.add(new winston.transports.Console());
 
 test.beforeEach((t) => {
   t.context.hub = new Server({ port: 0 });
@@ -45,7 +45,7 @@ async function oneResponse(ws) {
 test('Should export Server class', (t) => {
   t.is(typeof Server, 'function');
 
-  const hub = t.context.hub;
+  const { hub } = t.context;
   t.is(typeof hub.start, 'function', 'Should expose start method.');
   t.is(typeof hub.stop, 'function', 'Should expose stop method.');
 });
@@ -91,7 +91,9 @@ test('Invalid message returns error message', async (t) => {
   t.is(reply.error, 'TypeError');
   t.deepEqual(reply.request, msg3);
 
-  const msg4 = JSON.stringify({ cmd: 'pub', action: '', payload: {}, taskId: uuid(), eventId: uuid(), event: 'invalid event' });
+  const msg4 = JSON.stringify({
+    cmd: 'pub', action: '', payload: {}, taskId: uuid(), eventId: uuid(), event: 'invalid event'
+  });
   ws.send(msg4);
   reply = await oneResponse(ws);
   t.is(reply.status, 'error');
@@ -110,7 +112,9 @@ test('Sub message should add subscriber, and a Pub msg should trigger it', async
   t.is(reply.status, 'ok');
   t.is(t.context.hub._findSubs(action).length, 1, 'Should add something in subs.');
 
-  ws2.send(JSON.stringify({ cmd: 'pub', action, payload: {}, taskId: uuid(), eventId: uuid(), event: 'init' }));
+  ws2.send(JSON.stringify({
+    cmd: 'pub', action, payload: {}, taskId: uuid(), eventId: uuid(), event: 'init'
+  }));
   const reply2 = await oneResponse(ws1);
 
   t.is(reply2.status, 'ok');
@@ -127,11 +131,15 @@ test('Complete msg should update subscribers with result', async (t) => {
   ws1.send(JSON.stringify({ cmd: 'sub', action }));
   await oneResponse(ws1); // Pop
 
-  ws2.send(JSON.stringify({ cmd: 'pub', event: 'init', action, payload: {}, taskId, eventId: uuid() }));
+  ws2.send(JSON.stringify({
+    cmd: 'pub', event: 'init', action, payload: {}, taskId, eventId: uuid()
+  }));
   const reply1 = await oneResponse(ws1);
   t.is(reply1.event, 'init');
 
-  ws2.send(JSON.stringify({ cmd: 'pub', event: 'success', result, taskId, eventId: uuid() }));
+  ws2.send(JSON.stringify({
+    cmd: 'pub', event: 'success', result, taskId, eventId: uuid()
+  }));
   const reply3 = await oneResponse(ws1);
   t.is(reply3.result, result);
 });
@@ -152,12 +160,16 @@ test('The client that publishes a task should be updated when its own tasks are 
 
   // WS2 sends an event about 'action1' which WS2 is not subscribed to
   // Since WS2 sent it, it should get all events about it's task
-  ws2.send(JSON.stringify({ cmd: 'pub', event: 'init', action: action1, payload: {}, taskId, eventId: uuid() }));
+  ws2.send(JSON.stringify({
+    cmd: 'pub', event: 'init', action: action1, payload: {}, taskId, eventId: uuid()
+  }));
   await oneResponse(ws1); // Pop
   const reply1 = await oneResponse(ws2);
   t.is(reply1.event, 'init'); // WS2 should get the event about it's task even though it is not subbed to action1
 
-  ws1.send(JSON.stringify({ cmd: 'pub', event: 'success', result, taskId, eventId: uuid() }));
+  ws1.send(JSON.stringify({
+    cmd: 'pub', event: 'success', result, taskId, eventId: uuid()
+  }));
   const reply2 = await oneResponse(ws2);
   t.is(reply2.event, 'success'); // WS2 should get the event about it's task even though it is not subbed to action1
 });
