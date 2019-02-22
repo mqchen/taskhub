@@ -72,7 +72,9 @@ class Client {
     const promise = new Promise((resolve) => {
       task.once('init', () => { resolve(task); });
     });
-    this.sendMessage({ cmd: 'pub', event: 'init', action, payload, eventId, taskId });
+    this.sendMessage({
+      cmd: 'pub', event: 'init', action, payload, eventId, taskId
+    });
     return promise;
   }
 

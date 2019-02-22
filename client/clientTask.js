@@ -1,5 +1,5 @@
-const Task = require('../common/task');
 const uuid = require('uuid/v4');
+const Task = require('../common/task');
 
 class ClientTask extends Task {
   constructor(id, client) {
@@ -8,7 +8,9 @@ class ClientTask extends Task {
   }
 
   sendEvent(event, other) {
-    this.client.sendMessage({ cmd: 'pub', event, eventId: uuid(), taskId: this.id, ...other });
+    this.client.sendMessage({
+      cmd: 'pub', event, eventId: uuid(), taskId: this.id, ...other
+    });
   }
 
   start() {
