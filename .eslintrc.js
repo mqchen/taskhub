@@ -3,7 +3,8 @@ module.exports = {
     "plugins": [
         "react",
         "jsx-a11y",
-        "import"
+        "import",
+        "ava"
     ],
     "rules": {
       "no-console": "off",

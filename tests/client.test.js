@@ -9,15 +9,17 @@ async function wait(ms) {
 
 Client.defaultLogger = winston.createLogger({
   level: 'debug',
-  transports: [new (winston.transports.Console)()]
+  transports: [new winston.transports.Console({
+    format: winston.format.simple()
+  })]
 });
-Client.defaultLogger.add(new winston.transports.Console());
 
 Server.defaultLogger = winston.createLogger({
   level: 'debug',
-  transports: [new (winston.transports.Console)()]
+  transports: [new winston.transports.Console({
+    format: winston.format.simple()
+  })]
 });
-Server.defaultLogger.add(new winston.transports.Console());
 
 
 async function createClient(t) {

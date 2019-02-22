@@ -6,9 +6,10 @@ const Server = require('../server');
 
 Server.defaultLogger = winston.createLogger({
   level: 'debug',
-  transports: [new (winston.transports.Console)()]
+  transports: [new winston.transports.Console({
+    format: winston.format.simple()
+  })]
 });
-Server.defaultLogger.add(new winston.transports.Console());
 
 test.beforeEach((t) => {
   t.context.hub = new Server({ port: 0 });
