@@ -4,14 +4,11 @@
   "private": true,
   "description": "taskhub",
   "main": "app.js",
-  "bin": {
-    "ncu": "./node_modules/npm-check-updates/bin/ncu"
-  },
   "scripts": {
     "example": "node --harmony example/app.js",
     "test": "ava -T=5s",
     "test-dev": "ava -wv -T=1s",
-    "ncu": "ncu"
+    "ncu": "./node_modules/npm-check-updates/bin/ncu"
   },
   "repository": {
     "type": "git",
