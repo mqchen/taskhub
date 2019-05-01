@@ -27,16 +27,16 @@
     "url": "^0.11.0",
     "uuid": "^3.3.2",
     "winston": "^3.2.1",
-    "ws": "^6.1.4"
+    "ws": "^6.2.1"
   },
   "devDependencies": {
-    "ava": "^1.2.1",
-    "eslint": "^5.14.1",
+    "ava": "^1.4.1",
+    "eslint": "^5.16.0",
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-ava": "^5.1.1",
-    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-import": "^2.17.2",
     "eslint-plugin-jsx-a11y": "^6.1.2",
     "eslint-plugin-react": "^7.11.1",
-    "npm-check-updates": "^2.15.0"
+    "npm-check-updates": "^3.1.8"
   }
 }
