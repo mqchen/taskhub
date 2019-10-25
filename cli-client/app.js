@@ -27,10 +27,10 @@ const { Client } = require('..');
     // Ask for input
     co(function* ask() {
       console.log('\n');
-      const action = yield prompt(`${chalk.inverse(' action: ')}  `);
+      const action = yield prompt(`${chalk.inverse('  action: ')}  `);
       if (action) {
-        const payload = yaml.safeLoad(yield prompt.multiline(`${chalk.inverse(' payload: ')} (yaml)`));
-        console.log(yield client.do(action, payload));
+        const payload = yaml.safeLoad(yield prompt.multiline(`${chalk.inverse(' payload: ')}  ${chalk.grey('(yaml)')}`));
+        console.log(chalk.blue('Response:'), yield client.do(action, payload));
       }
       co(ask);
     });

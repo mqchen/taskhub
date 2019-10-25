@@ -1,5 +1,9 @@
 const { Server, Client } = require('..');
 
+async function wait(ms) {
+  return new Promise((resolve) => { setTimeout(() => resolve(), ms); });
+}
+
 const config = {
   port: 8080,
   service: 'test',
@@ -25,6 +29,7 @@ hub.addCredentials(config.service, {
     const min = parseFloat(payload.min) || 0;
     const max = parseFloat(payload.max) || 100;
     const rand = Math.floor(Math.random() * ((max - min) + 1)) + min;
+    await wait(rand + 1000);
     console.log('test:rand', `'${rand}' is a random int between ${min} and ${max}.`);
     task.success(rand);
   });
