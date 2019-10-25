@@ -8,7 +8,7 @@
     "example": "node --harmony example/app.js",
     "test": "ava -T=5s",
     "test-dev": "ava -wv -T=1s",
-    "ncu": "./node_modules/npm-check-updates/bin/ncu"
+    "upgrade": "ncu -u && npm i"
   },
   "repository": {
     "type": "git",
@@ -25,18 +25,18 @@
     "chalk": "^2.4.2",
     "event-emitter": "^0.3.5",
     "url": "^0.11.0",
-    "uuid": "^3.3.2",
+    "uuid": "^3.3.3",
     "winston": "^3.2.1",
-    "ws": "^6.2.1"
+    "ws": "^7.2.0"
   },
   "devDependencies": {
-    "ava": "^1.4.1",
-    "eslint": "^5.16.0",
-    "eslint-config-airbnb": "^17.1.0",
-    "eslint-plugin-ava": "^5.1.1",
-    "eslint-plugin-import": "^2.17.2",
-    "eslint-plugin-jsx-a11y": "^6.1.2",
-    "eslint-plugin-react": "^7.11.1",
-    "npm-check-updates": "^3.1.8"
+    "ava": "^2.4.0",
+    "eslint": "^6.6.0",
+    "eslint-config-airbnb": "^18.0.1",
+    "eslint-plugin-ava": "^9.0.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-react": "^7.16.0",
+    "npm-check-updates": "^3.1.25"
   }
 }
