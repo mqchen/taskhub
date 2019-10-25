@@ -113,10 +113,10 @@ test('Post task that succeeds should return result', async (t) => {
   const { client } = t.context;
 
   const result = `result_${Math.random()}`;
-  client.sub('test:test', task => task.success(result)); // This service only replies with static result.
+  client.sub('test:test', (task) => task.success(result)); // This service only replies with static result.
 
   // const response = await (await client.pub('test:test')).getResult();
-  const response = await client.pub('test:test').then(x => x.getResult());
+  const response = await client.pub('test:test').then((x) => x.getResult());
   // TODO: support for: const response = await client.pub('test:test').getResult();
 
   t.is(response, result);
@@ -126,10 +126,10 @@ test('When tasks fails it should provide reason', async (t) => {
   t.plan(1);
   const { client } = t.context;
 
-  client.sub('test:test', task => task.fail('some reason'));
+  client.sub('test:test', (task) => task.fail('some reason'));
 
   const task = await client.pub('test:test');
-  task.on('fail', async tt => t.is(await tt.getReason(), 'some reason'));
+  task.on('fail', async (tt) => t.is(await tt.getReason(), 'some reason'));
   await wait(10);
 });
 

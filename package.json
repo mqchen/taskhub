@@ -2,10 +2,12 @@
   "name": "taskhub",
   "version": "1.0.0",
   "private": true,
-  "description": "taskhub",
+  "description": "PubSubHub over websockets",
   "main": "app.js",
   "scripts": {
-    "example": "node --harmony example/app.js",
+    "example-server": "node example/server.js",
+    "example-client": "npm run cli-client -- --host localhost --port 8080 --service test --key asdf",
+    "cli-client": "node cli-client/app.js",
     "test": "ava -T=5s",
     "test-dev": "ava -wv -T=1s",
     "upgrade": "ncu -u && npm i"
@@ -23,7 +25,12 @@
   "dependencies": {
     "basic-auth": "^2.0.1",
     "chalk": "^2.4.2",
+    "co": "^4.6.0",
+    "co-prompt": "^1.0.0",
+    "command-line-args": "^5.1.1",
+    "command-line-usage": "^6.0.2",
     "event-emitter": "^0.3.5",
+    "js-yaml": "^3.13.1",
     "url": "^0.11.0",
     "uuid": "^3.3.3",
     "winston": "^3.2.1",

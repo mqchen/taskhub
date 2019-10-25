@@ -61,14 +61,14 @@ class Task {
 
   static validateEvent(event) {
     if (typeof event !== 'object') throw new TypeError('Event messages must be objects.');
-    if (!['eventId', 'event'].every(key => Object.prototype.hasOwnProperty.call(event, key))) {
+    if (!['eventId', 'event'].every((key) => Object.prototype.hasOwnProperty.call(event, key))) {
       throw new TypeError('Messages must at least have props \'eventId\' and \'event\' to validate.');
     }
     if (!Object.prototype.hasOwnProperty.call(EVENTS_AND_PROPS, event.event)) {
       throw new RangeError(`Event message has unsupported event: '${event.event}'. Supported events: ${Object.keys(EVENTS_AND_PROPS).join(', ')}`);
     }
     if (!EVENTS_AND_PROPS[event.event]
-      .every(key => Object.prototype.hasOwnProperty.call(event, key))) {
+      .every((key) => Object.prototype.hasOwnProperty.call(event, key))) {
       throw new TypeError(`Event messages of event '${event.event}' must have props: ${EVENTS_AND_PROPS[event.event].join(', ')}`);
     }
     return true;
@@ -113,11 +113,11 @@ class Task {
   }
 
   addEvent(rawMsg) {
-    const msg = Object.assign({}, rawMsg);
+    const msg = { ...rawMsg };
 
     if (!Task.validateEvent(msg)) return false;
 
-    if (this._eventMessages.find(m => m.eventId === msg.eventId)) {
+    if (this._eventMessages.find((m) => m.eventId === msg.eventId)) {
       throw Error(`Message with same ID has already been added. ${JSON.stringify(msg)}`);
     }
 
@@ -138,7 +138,7 @@ class Task {
   }
 
   get events() {
-    return this._eventMessages.map(a => ({ ...a })); // Return a copy of messages
+    return this._eventMessages.map((a) => ({ ...a })); // Return a copy of messages
   }
 
   getLastEvent() {
@@ -146,7 +146,7 @@ class Task {
   }
 
   async getPayload() {
-    return Object.assign({}, this._payload);
+    return { ...this._payload };
   }
 
   async getResult(def) {

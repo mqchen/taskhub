@@ -92,7 +92,7 @@ class Client {
    * Short-hand for pub and getResult.
    */
   async do(action, payload, defaultResult) {
-    return this.pub(action, payload).then(task => task.getResult(defaultResult));
+    return this.pub(action, payload).then((task) => task.getResult(defaultResult));
   }
 }
 
