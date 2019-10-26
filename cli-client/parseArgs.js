@@ -33,8 +33,15 @@ module.exports = () => {
     {
       name: 'key',
       type: String,
-      typeLabel: '{underline key}',
+      typeLabel: '{underline secret key}',
       description: 'The key your service uses for authentication. Your API key.'
+    },
+    {
+      name: 'format',
+      type: String,
+      typeLabel: '{underline yaml-to-json, json, plain}',
+      description: 'Choose a format for writing payloads. Default is yaml-to-json.',
+      defaultValue: 'yaml-to-json'
     },
     {
       name: 'help',

@@ -29,7 +29,16 @@ const { Client } = require('..');
       console.log('\n');
       const action = yield prompt(`${chalk.inverse('  action: ')}  `);
       if (action) {
-        const payload = yaml.safeLoad(yield prompt.multiline(`${chalk.inverse(' payload: ')}  ${chalk.grey('(yaml)')}`));
+        const rawPayload = yield prompt.multiline(`${chalk.inverse(' payload: ')}  ${chalk.grey(`(${args.format})`)}`);
+        let payload = rawPayload;
+        if (args.format === 'yaml-to-json') payload = yaml.safeLoad(rawPayload);
+        if (args.format === 'json') {
+          try {
+            payload = JSON.parse(rawPayload);
+          } catch (e) {
+            console.error('Invalid JSON');
+          }
+        }
         console.log(chalk.blue('Response:'), yield client.do(action, payload));
       }
       co(ask);
