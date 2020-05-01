@@ -1,6 +1,6 @@
 const WebSocket = require('ws');
 const URL = require('url');
-const uuid = require('uuid/v4');
+const uuid = require('uuid').v4;
 const chalk = require('chalk');
 const ClientTask = require('./clientTask');
 const MemoryTaskStore = require('../common/stores/memory');

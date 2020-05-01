@@ -1,5 +1,5 @@
 const test = require('ava');
-const uuid = require('uuid/v4');
+const uuid = require('uuid').v4;
 const Task = require('../common/task');
 
 async function wait(ms) {
@@ -47,19 +47,19 @@ test('validateEvent()', (t) => {
   const badMsg1 = 'not even json';
   t.throws(() => {
     Task.validateEvent(badMsg1);
-  }, TypeError);
+  }, { instanceOf: TypeError });
 
   const badMsg2 = { json: 'but missing', mandatory: 'fields' };
   t.throws(() => {
     Task.validateEvent(badMsg2);
-  }, TypeError);
+  }, { instanceOf: TypeError });
 
   const badMsg3 = {
     action: 'something', payload: null, result: null, eventId: 'x', event: 'UNSUPPORTED EVENT'
   };
   t.throws(() => {
     Task.validateEvent(badMsg3);
-  }, RangeError);
+  }, { instanceOf: RangeError });
 
 
   const EVENTS_AND_PROPS = {
@@ -102,7 +102,9 @@ test('addEvent(): should prevent duplicate messages being added', (t) => {
   task.addEvent({
     event: 'init', action: 'hello:world', eventId: id, payload: null
   });
-  t.throws(() => { task.addEvent({ eventId: id, event: 'start' }); }, Error, 'Should throw when adding message of same id twice.');
+  t.throws(() => { task.addEvent({ eventId: id, event: 'start' }); },
+    { instanceOf: Error },
+    'Should throw when adding message of same id twice.');
   task.addEvent({ event: 'start', eventId: uuid() });
 
   t.is(task.events.length, 2, 'The duplicate event should be ignored.');

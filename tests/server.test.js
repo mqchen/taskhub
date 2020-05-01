@@ -1,7 +1,7 @@
 const test = require('ava');
 const winston = require('winston');
 const WebSocket = require('ws');
-const uuid = require('uuid/v4');
+const uuid = require('uuid').v4;
 const Server = require('../server');
 
 Server.defaultLogger = winston.createLogger({
