@@ -1,9 +1,9 @@
 /* eslint class-methods-use-this: ["error", { "exceptMethods": ["_sendMessageToClient"] }] */
 
 const WebSocket = require('ws');
-const chalk = require('chalk');
 const basicAuth = require('basic-auth');
 const Task = require('../common/task');
+const ConsoleLogger = require('../common/consoleLogger');
 const MemoryTaskStore = require('../common/stores/memory');
 
 class Server {
@@ -12,14 +12,14 @@ class Server {
       port: 8080,
       verifyClient: this._verfyClient.bind(this)
     };
-    this.logger = Server.defaultLogger;
+    this.logger = ConsoleLogger;
     this.opts = { ...defaultOpts, ...opts };
     this.server = null;
     this.address = null;
     this.credentials = {};
     this.clients = [];
 
-    // subs
+    // subcribers
     this.subs = {};
     // Task store, will be moved to Redis or MongoDB in the future
     this.taskStore = new MemoryTaskStore();
@@ -27,7 +27,7 @@ class Server {
 
   start() {
     this.server = new WebSocket.Server(this.opts);
-    this.logger.info(chalk.green('Starting server at:'), this.server.address().port);
+    this.logger.info('🔌 Starting server at:', this.server.address().port);
     this.server.on('connection', (...args) => this._initClient(...args));
     this.address = this.server.address();
     return this.address;
@@ -42,7 +42,7 @@ class Server {
   }
 
   addCredentials(service, creds) {
-    this.logger.info(chalk.gray(`Credentials added for '${service}' service.`));
+    this.logger.info(`🔑 Credentials added for '${service}' service.`);
     this.credentials[service] = creds;
   }
 
@@ -75,14 +75,14 @@ class Server {
     const serviceName = creds.name;
     if (!this.clients[serviceName]) this.clients[serviceName] = [];
     this._getClientsFor(serviceName).push(client);
-    this.logger.info(`New client for '${serviceName}' authenticated. Total clients of this serivice: ${this.clients[serviceName].length}`);
+    this.logger.info(`👋 New client for '${serviceName}' authenticated. Total clients of this service: ${this.clients[serviceName].length}`);
 
     // Register events
     client.on('message', (data) => {
       try {
         this._execCommand(serviceName, client, data);
       } catch (e) {
-        this.logger.info(chalk.yellow('Invalid message:'), e.message, data);
+        this.logger.warn('Invalid message:', e.message, data);
         this._sendMessageToClient(client, 'error', { error: e.name, message: e.message, request: data });
       }
     });
@@ -90,7 +90,7 @@ class Server {
 
   // Send messages
   _sendMessage(serviceName, status, msg) {
-    this.logger.info(chalk.gray(`Sending ${status} message to '${serviceName}'.`), msg);
+    this.logger.info(`📤 Sending ${status} message to '${serviceName}'.`, msg);
     this._getClientsFor(serviceName).forEach((client) => {
       this._sendMessageToClient(client, status, msg);
     });
@@ -134,7 +134,7 @@ class Server {
     if (!this.subs[action]) this.subs[action] = [];
     if (this.subs[action].includes(serviceName)) return;
     this.subs[action].push(serviceName);
-    this.logger.info(`'${serviceName}' is now subscribed to action: ${action}.`);
+    this.logger.info(`👂 '${serviceName}' is now subscribed to action: ${action}.`);
   }
 
 
@@ -159,7 +159,7 @@ class Server {
 
       // Broadcast to all subs and the from-service
       const broadcastTo = this._findSubs(task.action);
-      this.logger.info(`Broadcasting '${task.action}' to ${broadcastTo.length} service(s).`);
+      this.logger.info(`📣 Broadcasting '${task.action}' to ${broadcastTo.length} service(s).`);
       if (!broadcastTo.includes(task.fromService)) broadcastTo.push(task.fromService);
       broadcastTo.forEach((subService) => {
         this._sendMessage(subService, 'ok', task.getLastEvent());
@@ -171,7 +171,5 @@ class Server {
     return this.subs[action] || [];
   }
 }
-
-Server.defaultLogger = console;
 
 module.exports = Server;

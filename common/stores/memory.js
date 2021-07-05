@@ -1,5 +1,4 @@
-
-
+// TODO: clear completed tasks
 class MemoryTaskStore {
   constructor() {
     this.tasks = {};
