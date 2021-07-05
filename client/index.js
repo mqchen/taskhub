@@ -7,6 +7,7 @@ const MemoryTaskStore = require('../common/stores/memory');
 
 class Client {
   constructor(url, service, key) {
+    this.logger = ConsoleLogger;
     // Add basic auth to url:
     this.url = URL.format({ ...URL.parse(url), auth: `${service}:${key}` });
     this.ws = new WebSocket(this.url, 'ws');
@@ -16,18 +17,24 @@ class Client {
     this.subs = {};
     this.tasks = {};
     this.taskStore = new MemoryTaskStore();
-    this.logger = ConsoleLogger;
   }
 
   _findSubs(action) {
     return this.subs[action] || [];
   }
 
-  static async create(url, service, key) {
+  static async create(args) {
+    const opts = {
+      url: null,
+      service: null,
+      key: null,
+      timeout: 1000,
+      ...args
+    };
     return new Promise((resolve, reject) => {
-      const client = new Client(url, service, key);
+      const client = new Client(opts.url, opts.service, opts.key);
       client.ws.once('open', () => resolve(client));
-      client.ws.once('close', () => reject(client));
+      client.ws.once('error', (error) => reject(error));
     });
   }
 

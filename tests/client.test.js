@@ -23,11 +23,11 @@ Server.defaultLogger = winston.createLogger({
 
 
 async function createClient(t) {
-  const client = await Client.create(
-    `ws://localhost:${t.context.hub.address.port}`,
-    t.context.serviceName,
-    t.context.creds.key
-  );
+  const client = await Client.create({
+    url: `ws://localhost:${t.context.hub.address.port}`,
+    service: t.context.serviceName,
+    key: t.context.creds.key
+  });
   return client;
 }
 

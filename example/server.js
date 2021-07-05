@@ -18,7 +18,7 @@ hub.addCredentials(config.service, {
 });
 
 (async () => {
-  const client = await Client.create(`ws://localhost:${config.port}`, config.service, config.key);
+  const client = await Client.create({ url: `ws://localhost:${config.port}`, service: config.service, key: config.key });
   client.sub('test:echo', async (task) => {
     const payload = await task.getPayload();
     console.log('test:echo', payload);

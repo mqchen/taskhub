@@ -61,6 +61,7 @@ class Server {
       cb(true);
       return;
     }
+    this.logger.info('Unauthorized connection. Rejecting it.');
     cb(false, 401, 'Unauthorized');
   }
 

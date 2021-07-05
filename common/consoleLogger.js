@@ -23,6 +23,7 @@ consoleLogger.trace = console.trace;
 
 consoleLogger.log = console.log;
 consoleLogger.debug = console.debug;
+consoleLogger.debug = (...args) => console.debug(chalk.green('👀'), ...args);
 consoleLogger.info = (...args) => console.info(chalk.blue('ℹ'), ...args);
 consoleLogger.warn = (...args) => console.warn(chalk.yellow('⚠️'), ...args);
 consoleLogger.error = (...args) => console.error(chalk.red('🛑'), ...args);
