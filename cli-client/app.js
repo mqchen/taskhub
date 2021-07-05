@@ -31,7 +31,7 @@ const { Client } = require('..');
       if (action) {
         const rawPayload = yield prompt.multiline(`${chalk.inverse(' payload: ')}  ${chalk.grey(`(${args.format})`)}`);
         let payload = rawPayload;
-        if (args.format === 'yaml-to-json') payload = yaml.safeLoad(rawPayload);
+        if (args.format === 'yaml-to-json') payload = yaml.load(rawPayload);
         if (args.format === 'json') {
           try {
             payload = JSON.parse(rawPayload);
