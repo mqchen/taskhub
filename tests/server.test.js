@@ -166,7 +166,7 @@ test('The client that publishes a task should be updated when its own tasks are 
   }));
   await oneResponse(ws1); // Pop
   const reply1 = await oneResponse(ws2);
-  t.is(reply1.event, 'init'); // WS2 should get the event about it's task even though it is not subbed to action1
+  t.is(reply1.event, 'init'); // WS2 should get the event about its task even though it is not subbed to action1
 
   ws1.send(JSON.stringify({
     cmd: 'pub', event: 'success', result, taskId, eventId: uuid()

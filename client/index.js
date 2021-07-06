@@ -74,7 +74,7 @@ class Client {
       }
 
       if (!task) {
-        this.logger.warn(`Received an event belonging to unknown task. Ignoring it. Probably a bug in the Server. (msg: ${JSON.stringify(msg)})`);
+        this.logger.warn(`Received an event belonging to unknown task. Ignoring it. (msg: ${JSON.stringify(msg)})`);
       } else {
         task.addEvent(msg);
         const callbacks = this._findSubs(msg.action);

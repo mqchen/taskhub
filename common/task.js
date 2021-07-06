@@ -21,6 +21,7 @@ class Task {
     this._fromService = fromService;
     this._action = null;
     this._payload = null;
+    this._lastUpdate = null;
     this._result = null;
     this._failReason = null;
     this._state = null;
@@ -130,6 +131,7 @@ class Task {
     if (okMsg.payload) this._payload = okMsg.payload;
     if (okMsg.result) this._result = okMsg.result;
     if (okMsg.reason) this._failReason = okMsg.reason;
+    if (okMsg.update) this._lastUpdate = okMsg.update;
 
     this._eventMessages.push(okMsg);
     this._setState(okMsg.event);
@@ -165,6 +167,10 @@ class Task {
       this.once('fail', rej2);
       this.once('success', () => resolve(this._result));
     });
+  }
+
+  getLastUpdate() {
+    return this._lastUpdate;
   }
 
   async getReason() {

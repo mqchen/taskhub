@@ -14,6 +14,7 @@ class MemoryTaskStore {
   }
 
   update(task) {
+    // Todo: delete tasks that have completed
     this.tasks[task.id] = task;
   }
 }

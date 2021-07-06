@@ -43,8 +43,8 @@ const hub = require('taskhub/server');
 
 const hub = new Server({
   port: 9999,
-  taskPickUpTimeout: 100 // if hub waits longer than this for subscribing services the task has failed.
-  taskCompleteTimeout: 1000 * 60 // default max time a task can run, override per task basis
+  taskStartTimeout: 100 // if hub waits longer than this for subscribing services the task has failed.
+  taskEndTimeout: 1000 * 60 // default max time a task can run, override per task basis
 });
 hub.addCredential('mailer', {
   key: '---super-secret-key---',
@@ -77,7 +77,7 @@ client.sub('email/bulk:send', async (task) => {
   task.update(data);
 
   // Triggers when another service updates the task
-  task.on('update', () => {});
+  task.on('update', (task) => { task.getLastUpdate() });
 
   // When another service returns and thereby completes the task globally.
   task.on('success', () => {});

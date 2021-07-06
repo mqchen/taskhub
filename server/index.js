@@ -1,5 +1,4 @@
 /* eslint class-methods-use-this: ["error", { "exceptMethods": ["_sendMessageToClient"] }] */
-
 const WebSocket = require('ws');
 const basicAuth = require('basic-auth');
 const Task = require('../common/task');
@@ -12,8 +11,8 @@ class Server {
       port: 8080,
       verifyClient: this._verfyClient.bind(this)
     };
-    this.logger = ConsoleLogger;
     this.opts = { ...defaultOpts, ...opts };
+    this.logger = ConsoleLogger;
     this.server = null;
     this.address = null;
     this.credentials = {};

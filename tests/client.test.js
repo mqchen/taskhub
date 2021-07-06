@@ -96,11 +96,14 @@ test('Publish new task and go through lifecycle', async (t) => {
   task.start();
   task.once('start', () => { t.pass(); });
 
-  // update
-  // TODO: update data should be passed to the listener
-  task.on('update', () => { t.pass(); });
-  task.update({ data: 'foo' });
-  task.update({ data: 'bar' });
+  // Update
+  const update1 = { data: 'foo' };
+  task.once('update', (tt) => { t.deepEqual(update1, tt.getLastUpdate()); });
+  task.update(update1);
+
+  const update2 = { data: 'bar' };
+  task.once('update', (tt) => { t.deepEqual(update1, tt.getLastUpdate()); });
+  task.update(update2);
 
   await wait(50);
 });
