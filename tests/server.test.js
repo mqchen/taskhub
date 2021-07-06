@@ -28,8 +28,8 @@ async function createConnection(t) {
     : t.context.hub.start();
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(`ws://${t.context.serviceName}:${t.context.creds.key}@localhost:${address.port}`, 'ws');
-    ws.on('open', () => resolve(ws));
-    ws.on('close', () => reject(ws));
+    ws.once('open', () => resolve(ws));
+    ws.once('error', (error) => reject(error));
   });
 }
 
@@ -175,15 +175,14 @@ test('The client that publishes a task should be updated when its own tasks are 
   t.is(reply2.event, 'success'); // WS2 should get the event about it's task even though it is not subbed to action1
 });
 
-// Impossible to catch an async exception... and impossible to prevent ws from throwing
-// test('Close unauthorized connections', async (t) => {
-//   t.plan(1);
-//   return new Promise((resolve, reject) => {
-//     const address = t.context.hub.start();
-//     const ws = new WebSocket(`ws://localhost:${address.port}`);
-//     ws.on('open', () => reject('Opened'));
-//     ws.on('close', () => resolve('Closed'));
-//   })
-//   .then(a => t.pass(a))
-//   .catch(a => t.fail(a));
-// });
+test('Close unauthorized connections', async (t) => {
+  t.plan(1);
+  return new Promise((resolve, reject) => {
+    const address = t.context.hub.start();
+    const ws = new WebSocket(`ws://localhost:${address.port}`);
+    ws.once('open', () => reject(new Error('Opened')));
+    ws.once('error', () => resolve('Closed'));
+  })
+    .then((a) => t.pass(a))
+    .catch((a) => t.fail(a));
+});
