@@ -3,10 +3,7 @@ const winston = require('winston');
 const getPort = require('get-port');
 const Client = require('../client');
 const Server = require('../server');
-
-async function wait(ms) {
-  return new Promise((resolve) => { setTimeout(() => resolve(), ms); });
-}
+const wait = require('../common/wait');
 
 Client.defaultLogger = winston.createLogger({
   level: 'debug',

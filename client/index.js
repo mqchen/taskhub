@@ -4,10 +4,7 @@ const uuid = require('uuid').v4;
 const ConsoleLogger = require('../common/consoleLogger');
 const ClientTask = require('./clientTask');
 const MemoryTaskStore = require('../common/stores/memory');
-
-async function wait(ms) {
-  return new Promise((resolve) => { setTimeout(() => resolve(), ms); });
-}
+const wait = require('../common/wait');
 
 class Client {
   constructor(url, service, key) {

@@ -22,7 +22,12 @@ const { Client } = require('..');
     });
     console.log(chalk.blue('Connecting to:'), url);
 
-    const client = await Client.create({ url, service: args.service, key: args.key });
+    const client = await Client.create({
+      url,
+      service: args.service,
+      key: args.key,
+      timeout: 5 * 60 * 1000
+    });
 
     // Ask for input
     co(function* ask() {
