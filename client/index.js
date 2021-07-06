@@ -11,7 +11,7 @@ class Client {
     this.logger = ConsoleLogger;
     // Add basic auth to url:
     this.url = URL.format({ ...URL.parse(url), auth: `${service}:${key}` });
-    this.ws = new WebSocket(this.url, 'ws');
+    this.ws = new WebSocket(this.url);
     this.ws.on('message', this._processMessage.bind(this));
     this.ws.on('open', () => {
       this.logger.info('✅ Client online.');
