@@ -111,7 +111,7 @@ test('Publish new task and go through lifecycle', async (t) => {
   task.once('end', async (tt) => { t.deepEqual(successResult, await tt.getResult()); });
   task.success(successResult);
 
-  await wait(100);
+  await wait(200);
 });
 
 test('Basic task posting without expecting anything', async (t) => {
@@ -129,7 +129,7 @@ test('Subs should be called on Pubs', async (t) => {
   client.sub('test:action', () => {}); // Noop
   client.sub('test:another-action', () => t.fail('Should not be called'));
   await client.pub('test:action');
-  await wait(50); // wait for it to get a change to run
+  await wait(100); // wait for it to get a change to run
 });
 
 test('Subs should be called with Task object, with access to payload.', async (t) => {
@@ -141,7 +141,7 @@ test('Subs should be called with Task object, with access to payload.', async (t
     t.deepEqual(await task.getPayload(), payload);
   });
   await client.pub('test:action', payload);
-  await wait(50);
+  await wait(100);
 });
 
 test('Post task that succeeds should return result', async (t) => {
@@ -165,7 +165,7 @@ test('When tasks fails it should provide reason', async (t) => {
 
   const task = await client.pub('test:test');
   task.on('fail', async (tt) => t.is(await tt.getReason(), 'some reason'));
-  await wait(10);
+  await wait(100);
 });
 
 test('do() short-hand for pub and getResult()', async (t) => {
