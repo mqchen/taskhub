@@ -160,7 +160,7 @@ class Server {
       // Broadcast to all subs and the from-service
       const broadcastTo = this._findSubs(task.action);
       this.logger.info(`📣 Broadcasting '${task.action}' to ${broadcastTo.length} service(s).`);
-      if (!broadcastTo.includes(task.fromService)) broadcastTo.push(task.fromService);
+      if (!broadcastTo.includes(task.fromClient)) broadcastTo.push(task.fromClient);
       broadcastTo.forEach((subService) => {
         this._sendMessage(subService, 'ok', task.getLastEvent());
       });

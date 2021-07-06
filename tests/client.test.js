@@ -105,13 +105,13 @@ test('Publish new task and go through lifecycle', async (t) => {
   task.once('update', (tt) => { t.deepEqual(update1, tt.getLastUpdate()); });
   task.update(update2);
 
-  // Success
+  // Success & End
   const successResult = { foo: Math.random(), bar: new Date().getTime() };
   task.once('success', async (tt) => { t.deepEqual(successResult, await tt.getResult()); });
   task.once('end', async (tt) => { t.deepEqual(successResult, await tt.getResult()); });
   task.success(successResult);
 
-  await wait(50);
+  await wait(100);
 });
 
 test('Basic task posting without expecting anything', async (t) => {

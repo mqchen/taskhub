@@ -15,10 +15,10 @@ const EVENTS_AND_PROPS = {
 };
 
 class Task {
-  constructor(id, fromService) {
+  constructor(id, fromClient) {
     const _id = id || uuid();
     Object.defineProperty(this, 'id', { value: _id, writable: false });
-    this._fromService = fromService;
+    this._fromClient = fromClient;
     this._action = null;
     this._payload = null;
     this._lastUpdate = null;
@@ -41,8 +41,8 @@ class Task {
     return this._state;
   }
 
-  get fromService() {
-    return this._fromService;
+  get fromClient() {
+    return this._fromClient;
   }
 
   on(...args) {
@@ -59,17 +59,17 @@ class Task {
     return this._emitter.off(...args);
   }
 
-  static validateEvent(event) {
-    if (typeof event !== 'object') throw new TypeError('Event messages must be objects.');
-    if (!['eventId', 'event'].every((key) => Object.prototype.hasOwnProperty.call(event, key))) {
+  static validateEvent(eventMessage) {
+    if (typeof eventMessage !== 'object') throw new TypeError('Event messages must be objects.');
+    if (!['eventId', 'event'].every((key) => Object.prototype.hasOwnProperty.call(eventMessage, key))) {
       throw new TypeError('Messages must at least have props \'eventId\' and \'event\' to validate.');
     }
-    if (!Object.prototype.hasOwnProperty.call(EVENTS_AND_PROPS, event.event)) {
-      throw new RangeError(`Event message has unsupported event: '${event.event}'. Supported events: ${Object.keys(EVENTS_AND_PROPS).join(', ')}`);
+    if (!Object.prototype.hasOwnProperty.call(EVENTS_AND_PROPS, eventMessage.event)) {
+      throw new RangeError(`Event message has unsupported event: '${eventMessage.event}'. Supported events: ${Object.keys(EVENTS_AND_PROPS).join(', ')}`);
     }
-    if (!EVENTS_AND_PROPS[event.event]
-      .every((key) => Object.prototype.hasOwnProperty.call(event, key))) {
-      throw new TypeError(`Event messages of event '${event.event}' must have props: ${EVENTS_AND_PROPS[event.event].join(', ')}`);
+    if (!EVENTS_AND_PROPS[eventMessage.event]
+      .every((key) => Object.prototype.hasOwnProperty.call(eventMessage, key))) {
+      throw new TypeError(`Event messages of event '${eventMessage.event}' must have props: ${EVENTS_AND_PROPS[eventMessage.event].join(', ')}`);
     }
     return true;
   }
