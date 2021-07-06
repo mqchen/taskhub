@@ -44,9 +44,13 @@ const { Client } = require('..');
             console.error('Invalid JSON');
           }
         }
-        console.log(chalk.blue('Response:'), yield client.do(action, payload));
+        // console.log(chalk.blue('Response:'), yield client.do(action, payload));
+        const task = yield client.pub(action, payload);
+        console.log(chalk.blue('Response:'), yield task.getResult());
+        task.once('end', () => co(ask));
+      } else {
+        co(ask);
       }
-      co(ask);
     });
   } catch (e) {
     console.error(e);

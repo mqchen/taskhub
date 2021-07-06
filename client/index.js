@@ -44,18 +44,20 @@ class Client {
       ...args
     };
     let keepTrying = true;
+    let lastError = null;
     const startTime = new Date().getTime();
     do {
       try {
         const client = await Client._connectClient(opts); // eslint-disable-line no-await-in-loop
         return client;
       } catch (error) {
+        lastError = error;
         if (error.code !== 'ECONNREFUSED') keepTrying = false;
         if (new Date().getTime() > startTime + opts.timeout) keepTrying = false;
         await wait(opts.retryDelay); // eslint-disable-line no-await-in-loop
       }
     } while (keepTrying);
-    throw new Error('Connection timeout');
+    throw lastError;
   }
 
   isOpen() {
