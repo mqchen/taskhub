@@ -75,7 +75,7 @@ test('Create new Client should try to reconnect until timeout', async (t) => {
 });
 
 test('Publish new task and go through lifecycle', async (t) => {
-  t.plan(9);
+  t.plan(11);
   const { client } = t.context;
   const payload = { a: 'payload here' };
   const action = `action_${Math.random()}`;
@@ -97,13 +97,19 @@ test('Publish new task and go through lifecycle', async (t) => {
   task.once('start', () => { t.pass(); });
 
   // Update
-  const update1 = { data: 'foo' };
+  const update1 = { a: 'foo' };
   task.once('update', (tt) => { t.deepEqual(update1, tt.getLastUpdate()); });
   task.update(update1);
 
-  const update2 = { data: 'bar' };
+  const update2 = { b: 'bar' };
   task.once('update', (tt) => { t.deepEqual(update1, tt.getLastUpdate()); });
   task.update(update2);
+
+  // Success
+  const successResult = { foo: Math.random(), bar: new Date().getTime() };
+  task.once('success', async (tt) => { t.deepEqual(successResult, await tt.getResult()); });
+  task.once('end', async (tt) => { t.deepEqual(successResult, await tt.getResult()); });
+  task.success(successResult);
 
   await wait(50);
 });

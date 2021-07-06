@@ -31,7 +31,6 @@ class Task {
 
     // Setup emitter
     this._emitter = EventEmitter();
-    // this._setupEmitter();
   }
 
   get action() {

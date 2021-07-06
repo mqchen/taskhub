@@ -27,10 +27,12 @@ class ClientTask extends Task {
 
   success(result) {
     this.sendEvent('success', { result });
+    this.sendEvent('end', { result });
   }
 
   fail(reason) {
     this.sendEvent('fail', { reason });
+    this.sendEvent('end', { reason });
   }
 }
 
