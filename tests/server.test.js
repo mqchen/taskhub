@@ -180,9 +180,9 @@ test('Close unauthorized connections', async (t) => {
   return new Promise((resolve, reject) => {
     const address = t.context.hub.start();
     const ws = new WebSocket(`ws://localhost:${address.port}`);
-    ws.once('open', () => reject(new Error('Opened')));
-    ws.once('error', () => resolve('Closed'));
+    ws.once('open', () => resolve());
+    ws.once('error', (error) => reject(error));
   })
-    .then((a) => t.pass(a))
-    .catch((a) => t.fail(a));
+    .then(t.fail)
+    .catch(t.pass);
 });
