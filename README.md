@@ -9,6 +9,9 @@ Important:
 
 # Vocabulary
 
+- `server`: The taskhub server.
+- `client`: Both "servers" and "clients" are referred to as clients here. A client is an instance of a service.
+- `service`: A type clients, e.g. "mailer".
 - `action`: A category of tasks. Example of actions can be: "email:send", "geo:geocode", "email/address:validate". Actions are composed of: `<noun>:<verb>` or `<noun>/<sub.noun>:<verb>`
 - `task`: An instance of an `action`, like a job.
 - `event`: An event that updates the state of a task. See task lifecycle for complete event reference
@@ -55,7 +58,7 @@ hub.start(); // Open for business
 import { Client } from 'taskhub';
 
 const client = new Client('ws:server:port', {
-  name: 'mailer' // unique name
+  service: 'mailer' // unique name
   key: '---super-secret-key---'
 });
 client.sub('email/bulk:send', async (task) => {

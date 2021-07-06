@@ -1,9 +1,9 @@
 {
   "name": "taskhub",
   "version": "0.0.1",
-  "private": true,
-  "description": "PubSubHub over websockets",
-  "main": "app.js",
+  "description": "PubSubHub over websockets, with a task lifecycle",
+  "keywords": ["websockets", "pubsub", "events"],
+  "main": "index.js",
   "scripts": {
     "example-server": "node example/server.js",
     "example-client": "npm run cli-client -- --host localhost --port 8080 --service test --key asdf",
