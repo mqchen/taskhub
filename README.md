@@ -5,15 +5,6 @@ Important:
 - This project is in early development and not all features are implemented yet.
 - Backwards compatibility not guaranteed until version 1.x.x
 
-# TODOs
-
-- Rewrite Server's `verifyClient` to check X-Auth-*** headers instead of using BasicAuth. For example: X-Auth-Service, X-Auth-Key
-- Client needs to implement auto-reconnect with server. Need to support two kinds of auto-reconnects; 1) network hiccup = only reconnect, no resubing. 2) server went down = reconnect and resubing to actions.
-- Server needs: `init-timeout` which should be short. Means no subing service picked it up.
-- Server needs: `task-timeout` which should be long. The subing service that picked up the task did not complete in time. Consider if this should be an event or be a variant of `fail`-event.
-- Server doesn't drop inactive connections form once connected clients that are no longer connected.
-- Only send events to the client that initiated the task.
-
 # Vocabulary
 
 - `action`: A category of tasks. Example of actions can be: "email:send", "geo:geocode", "email/address:validate". Actions are composed of: `<noun>:<verb>` or `<noun>/<sub.noun>:<verb>`
