@@ -1,6 +1,6 @@
 {
   "name": "taskhub",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "PubSubHub over websockets",
   "main": "app.js",
@@ -14,14 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@gitlab.com/mq.chen/taskhub.git"
+    "url": "git+ssh://git@github.com:mqchen/taskhub.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://gitlab.com/mq.chen/taskhub/issues"
+    "url": "https://github.com/mqchen/taskhub/issues"
   },
-  "homepage": "https://gitlab.com/mq.chen/taskhub#README",
+  "homepage": "https://github.com/mqchen/taskhub/blob/master/README.md",
   "dependencies": {
     "basic-auth": "^2.0.1",
     "chalk": "^4.1.1",
