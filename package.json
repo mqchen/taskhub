@@ -1,5 +1,5 @@
 {
-  "name": "taskhub",
+  "name": "taskhubjs",
   "version": "0.0.1",
   "description": "PubSubHub over websockets, with a task lifecycle",
   "keywords": ["websockets", "pubsub", "events"],
