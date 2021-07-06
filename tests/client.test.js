@@ -1,5 +1,6 @@
 const test = require('ava');
 const winston = require('winston');
+const getPort = require('get-port');
 const Client = require('../client');
 const Server = require('../server');
 
@@ -21,20 +22,21 @@ Server.defaultLogger = winston.createLogger({
   })]
 });
 
-
 async function createClient(t) {
   const client = await Client.create({
     url: `ws://localhost:${t.context.hub.address.port}`,
     service: t.context.serviceName,
-    key: t.context.creds.key
+    key: t.context.creds.key,
+    timeout: t.context.timeout
   });
   return client;
 }
 
 test.beforeEach(async (t) => {
-  t.context.hub = new Server({ port: 0 });
+  t.context.hub = new Server({ port: await getPort() });
   t.context.creds = { key: `password_${Math.random()}` };
   t.context.serviceName = `test_${Math.random()}`;
+  t.context.timeout = 100;
   t.context.hub.addCredentials(t.context.serviceName, t.context.creds);
   t.context.hub.start();
   t.context.client = await createClient(t);
@@ -46,6 +48,33 @@ test.afterEach.always((t) => {
 
 test('Create new Client should auto connect', async (t) => {
   t.true(t.context.client.isOpen());
+});
+
+test('Create new Client should try to reconnect until timeout', async (t) => {
+  t.plan(1);
+  // create own server and client
+  const port = await getPort();
+  const hub = new Server({ port });
+  const creds = { key: `password_${Math.random()}` };
+  const serviceName = `test_${Math.random()}`;
+  hub.addCredentials(serviceName, creds);
+  try {
+    const out = await Promise.all([
+      Client.create({
+        url: `ws://localhost:${port}`,
+        service: serviceName,
+        key: creds.key,
+        timeout: 5000
+      },
+      new Promise((resolve) => {
+        // Start hub after client tries to connect
+        setTimeout(() => resolve(hub.start()), 500);
+      }))
+    ]);
+    t.true(out[0].isOpen(), 'Client should be open now');
+  } catch (e) {
+    t.fail(e.message);
+  }
 });
 
 test('Publish new task and go through lifecycle', async (t) => {

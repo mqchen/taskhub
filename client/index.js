@@ -5,6 +5,10 @@ const ConsoleLogger = require('../common/consoleLogger');
 const ClientTask = require('./clientTask');
 const MemoryTaskStore = require('../common/stores/memory');
 
+async function wait(ms) {
+  return new Promise((resolve) => { setTimeout(() => resolve(), ms); });
+}
+
 class Client {
   constructor(url, service, key) {
     this.logger = ConsoleLogger;
@@ -12,8 +16,10 @@ class Client {
     this.url = URL.format({ ...URL.parse(url), auth: `${service}:${key}` });
     this.ws = new WebSocket(this.url, 'ws');
     this.ws.on('message', this._processMessage.bind(this));
-    this.ws.on('open', () => this.logger.info('✅ Client online.'));
-    this.ws.on('close', () => this.logger.info('❌ Client offline.'));
+    this.ws.on('open', () => {
+      this.logger.info('✅ Client online.');
+      this.ws.on('close', () => this.logger.info('❌ Client offline.'));
+    });
     this.subs = {};
     this.tasks = {};
     this.taskStore = new MemoryTaskStore();
@@ -23,19 +29,36 @@ class Client {
     return this.subs[action] || [];
   }
 
+  static async _connectClient(opts) {
+    return new Promise((resolve, reject) => {
+      const client = new Client(opts.url, opts.service, opts.key);
+      client.ws.once('open', () => resolve(client));
+      client.ws.once('error', (error) => reject(error));
+    });
+  }
+
   static async create(args) {
     const opts = {
       url: null,
       service: null,
       key: null,
       timeout: 1000,
+      retryDelay: 10,
       ...args
     };
-    return new Promise((resolve, reject) => {
-      const client = new Client(opts.url, opts.service, opts.key);
-      client.ws.once('open', () => resolve(client));
-      client.ws.once('error', (error) => reject(error));
-    });
+    let keepTrying = true;
+    const startTime = new Date().getTime();
+    do {
+      try {
+        const client = await Client._connectClient(opts); // eslint-disable-line no-await-in-loop
+        return client;
+      } catch (error) {
+        if (error.code !== 'ECONNREFUSED') keepTrying = false;
+        if (new Date().getTime() > startTime + opts.timeout) keepTrying = false;
+        await wait(opts.retryDelay); // eslint-disable-line no-await-in-loop
+      }
+    } while (keepTrying);
+    throw new Error('Connection timeout');
   }
 
   isOpen() {

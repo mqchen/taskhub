@@ -66,7 +66,8 @@ class Server {
   }
 
   _getClientsFor(serviceName) {
-    return this.clients[serviceName] || [];
+    if (!this.clients[serviceName]) this.clients[serviceName] = [];
+    return this.clients[serviceName];
   }
 
   _initClient(client, req) {
@@ -74,7 +75,6 @@ class Server {
     const creds = basicAuth(req);
     // const serviceName = req.headers.service;
     const serviceName = creds.name;
-    if (!this.clients[serviceName]) this.clients[serviceName] = [];
     this._getClientsFor(serviceName).push(client);
     this.logger.info(`👋 New client for '${serviceName}' authenticated. Total clients of this service: ${this.clients[serviceName].length}`);
 

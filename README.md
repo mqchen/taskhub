@@ -1,6 +1,9 @@
 # TaskHub
+Send it tasks, watch as they happen.
 
-PubSubHub - Send it tasks, watch as they happen.
+Important:
+- This project is in early development and not all features are implemented yet.
+- Backwards compatibility not guaranteed until version 1.x.x
 
 # TODOs
 
@@ -9,6 +12,7 @@ PubSubHub - Send it tasks, watch as they happen.
 - Server needs: `init-timeout` which should be short. Means no subing service picked it up.
 - Server needs: `task-timeout` which should be long. The subing service that picked up the task did not complete in time. Consider if this should be an event or be a variant of `fail`-event.
 - Server doesn't drop inactive connections form once connected clients that are no longer connected.
+- Only send events to the client that initiated the task.
 
 # Vocabulary
 
