@@ -5,6 +5,8 @@ Important:
 - This project is in early development and not all features are implemented yet.
 - Backwards compatibility not guaranteed until version 1.x.x
 
+[![Node.js CI](https://github.com/mqchen/taskhub/actions/workflows/node.js.yml/badge.svg)](https://github.com/mqchen/taskhub/actions/workflows/node.js.yml)
+
 # Vocabulary
 
 - `action`: A category of tasks. Example of actions can be: "email:send", "geo:geocode", "email/address:validate". Actions are composed of: `<noun>:<verb>` or `<noun>/<sub.noun>:<verb>`
