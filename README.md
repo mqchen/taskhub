@@ -10,8 +10,8 @@ Important:
 # Vocabulary
 
 - `server`: The taskhub server.
-- `client`: Both "servers" and "clients" are referred to as clients here. A client is an instance of a service.
-- `service`: A type clients, e.g. "mailer".
+- `client`: Both "clients" and "services" (that respond to clients) are referred to as clients here. A client is an instance of a service.
+- `service`: A type of clients, e.g. "mailer".
 - `action`: A category of tasks. Example of actions can be: "email:send", "geo:geocode", "email/address:validate". Actions are composed of: `<noun>:<verb>` or `<noun>/<sub.noun>:<verb>`
 - `task`: An instance of an `action`, like a job.
 - `event`: An event that updates the state of a task. See task lifecycle for complete event reference
@@ -35,18 +35,18 @@ Important:
 ## Server
 
 ```javascript
-const hub = require('taskhub/server');
+const { Server } = require('taskhub');
 
 const hub = new Server({
   port: 9999,
-  taskStartTimeout: 100 // if hub waits longer than this for subscribing services the task has failed.
-  taskEndTimeout: 1000 * 60 // default max time a task can run, override per task basis
+  taskStartTimeout: 100, // if hub waits longer than this for subscribing services the task has failed. NOT IMPLEMENTED YET.
+  taskEndTimeout: 1000 * 60 // default max time a task can run, override per  task basis. NOT IMPLEMENTED YET.
 });
 hub.addCredential('mailer', {
   key: '---super-secret-key---',
-  subPermissions: [ 'mail:send-bulk' ], // what the service is allowed to listen to
-  pubPermissions: [ 'log:error', 'log:warn', 'log:info', 'googlemaps' ], // what the service is allowed to emit. E.g. 'log' so that it can log stuff. 'googlemaps' to ask another service for geocoding there
-  maxInstances: 1 // only allow one simultaneous instance from this service. If > 1 hub will distribute events to each connection by round robin. Not implemented.
+  subPermissions: [ 'mail:send-bulk' ], // what the service is allowed to listen to. NOT IMPLEMENTED YET.
+  pubPermissions: [ 'log:error', 'log:warn', 'log:info', 'googlemaps' ], // what the service is allowed to emit. E.g. 'log' so that it can log stuff. 'googlemaps' to ask another service for geocoding there. NOT IMPLEMENTED YET.
+  maxInstances: 1 // only allow one simultaneous instance from this service. If > 1 hub will distribute events to each connection by round robin. NOT IMPLEMENTED YET.
 });
 
 hub.start(); // Open for business
@@ -57,8 +57,9 @@ hub.start(); // Open for business
 ```javascript
 import { Client } from 'taskhub';
 
-const client = new Client('ws:server:port', {
-  service: 'mailer' // unique name
+const client = new Client({
+  url: 'ws:server:port', // server url
+  service: 'mailer', // unique name
   key: '---super-secret-key---'
 });
 client.sub('email/bulk:send', async (task) => {

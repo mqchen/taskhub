@@ -150,9 +150,9 @@ class Task {
     return { ...this._payload };
   }
 
-  async getResult(def) {
+  async getResult(defaultValueIfError) {
     const rej = () => {
-      if (def) return Promise.resolve(def);
+      if (defaultValueIfError) return Promise.resolve(defaultValueIfError);
       return Promise.reject();
     };
     if (this.hasHappened('fail')) return rej();
@@ -160,7 +160,7 @@ class Task {
 
     return new Promise((resolve, reject) => {
       const rej2 = () => {
-        if (def) return resolve(def);
+        if (defaultValueIfError) return resolve(defaultValueIfError);
         return reject();
       };
       this.once('fail', rej2);
