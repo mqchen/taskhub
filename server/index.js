@@ -54,7 +54,6 @@ class Server {
     const creds = basicAuth(info.req);
     const clientName = creds && creds.name ? decodeURIComponent(creds.name) : null;
     const key = creds && creds.pass ? decodeURIComponent(creds.pass) : null;
-    console.log(clientName, key);
     if (clientName !== null && key !== null
       && this.credentials[clientName] && this.credentials[clientName].key === key) {
       cb(true);

@@ -14,8 +14,8 @@ Server.defaultLogger = winston.createLogger({
 test.beforeEach((t) => {
   t.context.hub = new Server({ port: 0 });
   t.context.creds = { key: `password_${Math.random()}` };
-  t.context.serviceName = `test_${Math.random()}`;
-  t.context.hub.addCredentials(t.context.serviceName, t.context.creds);
+  t.context.clientName = `test_${Math.random()}`;
+  t.context.hub.addCredentials(t.context.clientName, t.context.creds);
 });
 
 test.afterEach.always((t) => {
@@ -27,7 +27,7 @@ async function createConnection(t) {
     ? t.context.hub.address
     : t.context.hub.start();
   return new Promise((resolve, reject) => {
-    const ws = new WebSocket(`ws://${t.context.serviceName}:${t.context.creds.key}@localhost:${address.port}`, 'ws');
+    const ws = new WebSocket(`ws://${t.context.clientName}:${t.context.creds.key}@localhost:${address.port}`, 'ws');
     ws.once('open', () => resolve(ws));
     ws.once('error', (error) => reject(error));
   });
@@ -65,7 +65,7 @@ test('Can add and remove credentials', (t) => {
 test('Can authorize with correct info', async (t) => {
   const ws = await createConnection(t);
   t.is(ws.readyState, WebSocket.OPEN, 'Expects readyState to be OPEN.');
-  t.deepEqual(Object.keys(t.context.hub.clients), [t.context.serviceName], 'Client should be registered and identified');
+  t.deepEqual(Object.keys(t.context.hub.clients), [t.context.clientName], 'Client should be registered and identified');
   ws.close();
 });
 

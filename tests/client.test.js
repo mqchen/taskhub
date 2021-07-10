@@ -22,7 +22,7 @@ Server.defaultLogger = winston.createLogger({
 async function createClient(t) {
   const client = await Client.create({
     url: `ws://localhost:${t.context.hub.address.port}`,
-    service: t.context.serviceName,
+    clientName: t.context.clientName,
     key: t.context.creds.key,
     timeout: t.context.timeout
   });
@@ -32,9 +32,9 @@ async function createClient(t) {
 test.beforeEach(async (t) => {
   t.context.hub = new Server({ port: await getPort() });
   t.context.creds = { key: `password_${Math.random()}` };
-  t.context.serviceName = `test_${Math.random()}`;
+  t.context.clientName = `test_${Math.random()}`;
   t.context.timeout = 100;
-  t.context.hub.addCredentials(t.context.serviceName, t.context.creds);
+  t.context.hub.addCredentials(t.context.clientName, t.context.creds);
   t.context.hub.start();
   t.context.client = await createClient(t);
 });
@@ -53,13 +53,13 @@ test('Create new Client should try to reconnect until timeout', async (t) => {
   const port = await getPort();
   const hub = new Server({ port });
   const creds = { key: `password_${Math.random()}` };
-  const serviceName = `test_${Math.random()}`;
-  hub.addCredentials(serviceName, creds);
+  const clientName = `test_${Math.random()}`;
+  hub.addCredentials(clientName, creds);
   try {
     const out = await Promise.all([
       Client.create({
         url: `ws://localhost:${port}`,
-        service: serviceName,
+        clientName,
         key: creds.key,
         timeout: 5000
       },

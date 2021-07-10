@@ -61,7 +61,6 @@ test('validateEvent()', (t) => {
     Task.validateEvent(badMsg3);
   }, { instanceOf: RangeError });
 
-
   const EVENTS_AND_PROPS = {
     init: ['action', 'payload'],
     start: [],

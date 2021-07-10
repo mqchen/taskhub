@@ -96,6 +96,8 @@ class Client {
     const payload = inputPayload === undefined ? null : inputPayload;
     const eventId = uuid();
     const taskId = uuid();
+    // TODO: refactor this to ClientTask.create()
+    // so that client doesn't need to understand 'init' and task lifecycle
     const task = new ClientTask(taskId, this);
     this.taskStore.add(task);
     const promise = new Promise((resolve) => {
