@@ -25,16 +25,16 @@ module.exports = () => {
       description: 'The port number your host is listening on'
     },
     {
-      name: 'service',
+      name: 'clientName',
       type: String,
-      typeLabel: '{underline service name}',
-      description: 'The name of your service that this client should authenticate as, e.g. debug'
+      typeLabel: '{underline client name}',
+      description: 'The name of your client for authentication as, e.g. debug'
     },
     {
       name: 'key',
       type: String,
       typeLabel: '{underline secret key}',
-      description: 'The key your service uses for authentication. Your API key.'
+      description: 'The key your client uses for authentication. Your API key.'
     },
     {
       name: 'format',

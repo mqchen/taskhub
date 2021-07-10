@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "example-server": "node example/server.js",
-    "example-client": "npm run cli-client -- --host localhost --port 8080 --service test --key asdf",
+    "example-client": "npm run cli-client -- --host localhost --port 8080 --clientName test --key asdf",
     "cli-client": "node cli-client/app.js",
     "test": "ava -T=5s",
     "test-dev": "ava -wv -T=1s",

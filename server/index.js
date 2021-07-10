@@ -9,7 +9,7 @@ class Server {
   constructor(opts) {
     const defaultOpts = {
       port: 8080,
-      verifyClient: this._verfyClient.bind(this)
+      verifyClient: this._verifyClient.bind(this)
     };
     this.opts = { ...defaultOpts, ...opts };
     this.logger = ConsoleLogger;
@@ -40,23 +40,23 @@ class Server {
     if (this.server) this.server.close();
   }
 
-  addCredentials(service, creds) {
-    this.logger.info(`🔑 Credentials added for '${service}' service.`);
-    this.credentials[service] = creds;
+  addCredentials(clientName, creds) {
+    this.logger.info(`🔑 Credentials added for client: ${clientName}`);
+    this.credentials[clientName] = creds;
   }
 
-  removeCredentials(service) {
-    delete this.credentials[service];
+  removeCredentials(clientName) {
+    delete this.credentials[clientName];
   }
 
   // Verify and init clients
-  _verfyClient(info, cb) {
+  _verifyClient(info, cb) {
     const creds = basicAuth(info.req);
-    const service = creds && creds.name ? decodeURIComponent(creds.name) : null;
+    const clientName = creds && creds.name ? decodeURIComponent(creds.name) : null;
     const key = creds && creds.pass ? decodeURIComponent(creds.pass) : null;
-
-    if (service !== null && key !== null
-      && this.credentials[service] && this.credentials[service].key === key) {
+    console.log(clientName, key);
+    if (clientName !== null && key !== null
+      && this.credentials[clientName] && this.credentials[clientName].key === key) {
       cb(true);
       return;
     }
@@ -64,23 +64,23 @@ class Server {
     cb(false, 401, 'Unauthorized');
   }
 
-  _getClientsFor(serviceName) {
-    if (!this.clients[serviceName]) this.clients[serviceName] = [];
-    return this.clients[serviceName];
+  _getClientsFor(clientName) {
+    if (!this.clients[clientName]) this.clients[clientName] = [];
+    return this.clients[clientName];
   }
 
   _initClient(client, req) {
     // Register client
     const creds = basicAuth(req);
-    // const serviceName = req.headers.service;
-    const serviceName = creds.name;
-    this._getClientsFor(serviceName).push(client);
-    this.logger.info(`👋 New client for '${serviceName}' authenticated. Total clients of this service: ${this.clients[serviceName].length}`);
+    // const clientName = req.headers.client;
+    const clientName = creds.name;
+    this._getClientsFor(clientName).push(client);
+    this.logger.info(`👋 New client for '${clientName}' authenticated. Total instances of this client: ${this.clients[clientName].length}`);
 
     // Register events
     client.on('message', (data) => {
       try {
-        this._execCommand(serviceName, client, data);
+        this._execCommand(clientName, client, data);
       } catch (e) {
         this.logger.warn('Invalid message:', e.message, data);
         this._sendMessageToClient(client, 'error', { error: e.name, message: e.message, request: data });
@@ -89,9 +89,9 @@ class Server {
   }
 
   // Send messages
-  _sendMessage(serviceName, status, msg) {
-    this.logger.info(`📤 Sending ${status} message to '${serviceName}'.`, msg);
-    this._getClientsFor(serviceName).forEach((client) => {
+  _sendMessage(clientName, status, msg) {
+    this.logger.info(`📤 Sending ${status} message to '${clientName}'.`, msg);
+    this._getClientsFor(clientName).forEach((client) => {
       this._sendMessageToClient(client, status, msg);
     });
   }
@@ -102,11 +102,11 @@ class Server {
   }
 
   // Handle messages
-  _execCommand(serviceName, client, rawMsg) {
+  _execCommand(clientName, client, rawMsg) {
     const msg = Server._parseCommand(rawMsg);
     switch (msg.cmd) {
-      case 'pub': return this._execPubCmd(serviceName, client, msg);
-      case 'sub': return this._execSubCmd(serviceName, client, msg);
+      case 'pub': return this._execPubCmd(clientName, client, msg);
+      case 'sub': return this._execSubCmd(clientName, client, msg);
       default:
         throw new TypeError(`Unsupported message cmd: ${msg.cmd}`);
     }
@@ -120,26 +120,24 @@ class Server {
     return json;
   }
 
-
   // Subscribe tasks
-  _execSubCmd(serviceName, fromClient, msg) {
+  _execSubCmd(clientName, fromClient, msg) {
     if (!Object.prototype.hasOwnProperty.call(msg, 'action')) {
       throw new TypeError('Sub messages must have props: action.');
     }
-    this._addSub(msg.action, serviceName);
+    this._addSub(msg.action, clientName);
     this._sendMessageToClient(fromClient, 'ok', { message: `Client subscribed to ${msg.action}.` });
   }
 
-  _addSub(action, serviceName) {
+  _addSub(action, clientName) {
     if (!this.subs[action]) this.subs[action] = [];
-    if (this.subs[action].includes(serviceName)) return;
-    this.subs[action].push(serviceName);
-    this.logger.info(`👂 '${serviceName}' is now subscribed to action: ${action}.`);
+    if (this.subs[action].includes(clientName)) return;
+    this.subs[action].push(clientName);
+    this.logger.info(`👂 '${clientName}' is now subscribed to action: ${action}.`);
   }
 
-
   // Publish messages
-  _execPubCmd(serviceName, client, msg) {
+  _execPubCmd(clientName, client, msg) {
     if (!Object.prototype.hasOwnProperty.call(msg, 'taskId')) {
       throw new TypeError('Pub messages must have props: taskId.');
     }
@@ -149,7 +147,7 @@ class Server {
       // Get or create task from taskStore
       let task = await this.taskStore.get(msg.taskId);
       if (!task) {
-        task = new Task(msg.taskId, serviceName);
+        task = new Task(msg.taskId, clientName);
         this.taskStore.add(task);
       }
 
@@ -157,12 +155,12 @@ class Server {
       task.addEvent(msg);
       this.taskStore.update(task);
 
-      // Broadcast to all subs and the from-service
+      // Broadcast to all subs and the from-client
       const broadcastTo = this._findSubs(task.action);
-      this.logger.info(`📣 Broadcasting '${task.action}' to ${broadcastTo.length} service(s).`);
+      this.logger.info(`📣 Broadcasting '${task.action}' to ${broadcastTo.length} client(s).`);
       if (!broadcastTo.includes(task.fromClient)) broadcastTo.push(task.fromClient);
-      broadcastTo.forEach((subService) => {
-        this._sendMessage(subService, 'ok', task.getLastEvent());
+      broadcastTo.forEach((subClient) => {
+        this._sendMessage(subClient, 'ok', task.getLastEvent());
       });
     }).call(this);
   }

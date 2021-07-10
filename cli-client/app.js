@@ -11,7 +11,7 @@ const { Client } = require('..');
     const args = parseArgs() || process.exit(1);
 
     // Check that we have all required params to connect
-    if (!['host', 'port', 'service', 'key'].every((key) => Object.prototype.hasOwnProperty.call(args, key))) {
+    if (!['host', 'port', 'clientName', 'key'].every((key) => Object.prototype.hasOwnProperty.call(args, key))) {
       throw new Error('Not all required params are provided. Please see --help.');
     }
 
@@ -24,7 +24,7 @@ const { Client } = require('..');
 
     const client = await Client.create({
       url,
-      service: args.service,
+      clientName: args.clientName,
       key: args.key,
       timeout: 5 * 60 * 1000
     });

@@ -7,10 +7,10 @@ const MemoryTaskStore = require('../common/stores/memory');
 const wait = require('../common/wait');
 
 class Client {
-  constructor(url, service, key) {
+  constructor(url, clientName, key) {
     this.logger = ConsoleLogger;
     // Add basic auth to url:
-    this.url = URL.format({ ...URL.parse(url), auth: `${service}:${key}` });
+    this.url = URL.format({ ...URL.parse(url), auth: `${clientName}:${key}` });
     this.ws = new WebSocket(this.url);
     this.ws.on('message', this._processMessage.bind(this));
     this.ws.on('open', () => {
@@ -28,7 +28,7 @@ class Client {
 
   static async _connectClient(opts) {
     return new Promise((resolve, reject) => {
-      const client = new Client(opts.url, opts.service, opts.key);
+      const client = new Client(opts.url, opts.clientName, opts.key);
       client.ws.once('open', () => resolve(client));
       client.ws.once('error', (error) => reject(error));
     });
@@ -37,7 +37,7 @@ class Client {
   static async create(args) {
     const opts = {
       url: null,
-      service: null,
+      clientName: null,
       key: null,
       timeout: 1000,
       retryDelay: 10,

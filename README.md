@@ -10,8 +10,7 @@ Important:
 # Vocabulary
 
 - `server`: The taskhub server.
-- `client`: Both "clients" and "services" (that respond to clients) are referred to as clients here. A client is an instance of a service.
-- `service`: A type of clients, e.g. "mailer".
+- `client`: Both "clients" and "services" (that respond to clients) are referred to as clients here. A connection is an instance of a client.
 - `action`: A category of tasks. Example of actions can be: "email:send", "geo:geocode", "email/address:validate". Actions are composed of: `<noun>:<verb>` or `<noun>/<sub.noun>:<verb>`
 - `task`: An instance of an `action`, like a job.
 - `event`: An event that updates the state of a task. See task lifecycle for complete event reference
@@ -59,7 +58,7 @@ import { Client } from 'taskhub';
 
 const client = new Client({
   url: 'ws:server:port', // server url
-  service: 'mailer', // unique name
+  clientName: 'mailer', // unique name
   key: '---super-secret-key---'
 });
 client.sub('email/bulk:send', async (task) => {
@@ -97,6 +96,6 @@ let result = await client.pub('email/bulk:send', emails, 1000 * 60 * 30 /* 30 mi
 
 // Call it with progress updates
 let finalResult = await client.pub('email/bulk:send', emails)
-  .on('update', (tmpResult) => { /* something */ })
+  .on('update', (task) => { console.log(task.getLastUpdate()); })
   .getResult(valueIfError);
 ```
