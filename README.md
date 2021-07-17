@@ -37,15 +37,32 @@ Important:
 const { Server } = require('taskhub');
 
 const hub = new Server({
-  port: 9999,
-  taskStartTimeout: 100, // if hub waits longer than this for subscribing services the task has failed. NOT IMPLEMENTED YET.
-  taskEndTimeout: 1000 * 60 // default max time a task can run, override per  task basis. NOT IMPLEMENTED YET.
+  port: 8080,
+  // If hub waits longer than this for subscribing clients
+  // the task has failed. Default value. Can be overridden per task.
+  // NOT IMPLEMENTED YET.
+  taskStartTimeout: 100,
+  // IF a task takes longer than this to finish (either success or error)
+  // hub will consider the task has failed and emit fail message.
+  // Can be overridden per task.
+  // NOT IMPLEMENTED YET.
+  taskEndTimeout: 1000 * 60
 });
-hub.addCredential('mailer', {
+
+hub.addCredentials('emailer', {
+  // The client's authentication key
   key: '---super-secret-key---',
-  subPermissions: [ 'mail:send-bulk' ], // what the service is allowed to listen to. NOT IMPLEMENTED YET.
-  pubPermissions: [ 'log:error', 'log:warn', 'log:info', 'googlemaps' ], // what the service is allowed to emit. E.g. 'log' so that it can log stuff. 'googlemaps' to ask another service for geocoding there. NOT IMPLEMENTED YET.
-  maxInstances: 1 // only allow one simultaneous instance from this service. If > 1 hub will distribute events to each connection by round robin. NOT IMPLEMENTED YET.
+  // The actions the client is allowed to subscribe to.
+  // NOT IMPLEMENTED YET.
+  subPermissions: [ 'email/bulk:send' ],
+  // The actions it is allowed to publish/start tasks for.
+  // Here is can mail:send, and it can do everything under geocode,
+  // such as weather:forecast, weather/metno:forecast
+  // NOT IMPLEMENTED YET.
+  pubPermissions: [ 'email:send', 'weather' ],
+  // Specify how many connections of this client is allowed.
+  // NOT IMPLEMENTED YET.
+  maxConnections: 1
 });
 
 hub.start(); // Open for business
@@ -58,9 +75,10 @@ import { Client } from 'taskhub';
 
 const client = new Client({
   url: 'ws:server:port', // server url
-  clientName: 'mailer', // unique name
+  clientName: 'emailer', // unique name
   key: '---super-secret-key---'
 });
+
 client.sub('email/bulk:send', async (task) => {
   // Tell the hub this service will begin work on this task, so that it knows to wait.
   // Otherwise, the hub will assume a task is complete when all listening services has seen it, or timedout. (The timeout is short.)
@@ -72,16 +90,16 @@ client.sub('email/bulk:send', async (task) => {
   // Update the caller on current progress
   task.update(data);
 
-  // Triggers when another service updates the task
+  // Triggers when another client updates the task
   task.on('update', (task) => { task.getLastUpdate() });
 
-  // When another service returns and thereby completes the task globally.
+  // When another client returns and thereby completes the task globally.
   task.on('success', () => {});
 
   // Done and the data is sent to the caller/publisher.
   return data; // or task.success(result);
 
-  // This service has completed but doesn't want to return a result to pub.
+  // This client has completed but doesn't want to return a result to pub.
   task.drop();
 });
 
