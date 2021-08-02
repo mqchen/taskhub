@@ -2,7 +2,7 @@ import test from 'ava';
 import winston from 'winston';
 import WebSocket from 'ws';
 import { v4 as uuid } from 'uuid';
-import Server from '../server/index';
+import Server from '../server';
 
 Server.defaultLogger = winston.createLogger({
   level: 'debug',
