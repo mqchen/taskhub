@@ -1,5 +1,4 @@
 import WebSocket from 'ws';
-import URL from 'url';
 import { v4 as uuid } from 'uuid';
 import ConsoleLogger from '../common/consoleLogger';
 import ClientTask from './clientTask';
@@ -9,21 +8,24 @@ import wait from '../common/wait';
 class Client {
   constructor(url, clientName, key) {
     this.logger = ConsoleLogger;
+
+    this.subs = {};
+    this.tasks = {};
+    this.taskStore = new MemoryTaskStore();
+
     // Add basic auth to url:
-    this.url = URL.format({ ...URL.parse(url), auth: `${clientName}:${key}` });
-    // this.url = new URL(url);
-    // this.url.username = clientName;
-    // this.url.password = key;
-    // this.url = this.url.toString();
+    const urlObj = new URL(url);
+    urlObj.username = clientName;
+    urlObj.password = key;
+    this.url = urlObj.toString();
+
+    // Create WS server
     this.ws = new WebSocket(this.url);
     this.ws.on('message', this._processMessage.bind(this));
     this.ws.on('open', () => {
       this.logger.info('✅ Client online.');
       this.ws.on('close', () => this.logger.info('❌ Client offline.'));
     });
-    this.subs = {};
-    this.tasks = {};
-    this.taskStore = new MemoryTaskStore();
   }
 
   _findSubs(action) {
