@@ -70,9 +70,10 @@ class Client {
     return this.ws.readyState === WebSocket.OPEN;
   }
 
-  _processMessage(data) {
-    this.logger.info('📨 Message received:', data);
-    const msg = JSON.parse(data);
+  _processMessage(data, isBinary) {
+    const message = isBinary ? data : data.toString();
+    this.logger.info('📨 Message received:', message);
+    const msg = JSON.parse(message);
     if (!msg.taskId) return;
     (async () => {
       let task = await this.taskStore.get(msg.taskId);
