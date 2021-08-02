@@ -1,5 +1,5 @@
 /* eslint class-methods-use-this: ["error", { "exceptMethods": ["_sendMessageToClient"] }] */
-import WebSocket from 'ws';
+import { WebSocketServer } from 'ws';
 import basicAuth from 'basic-auth';
 import Task from '../common/task';
 import ConsoleLogger from '../common/consoleLogger';
@@ -25,7 +25,7 @@ class Server {
   }
 
   start() {
-    this.server = new WebSocket.Server(this.opts);
+    this.server = new WebSocketServer(this.opts);
     this.logger.info('🔌 Starting server at:', this.server.address().port);
     this.server.on('connection', (...args) => this._initClient(...args));
     this.address = this.server.address();
@@ -77,12 +77,13 @@ class Server {
     this.logger.info(`👋 New client for '${clientName}' authenticated. Total instances of this client: ${this.clients[clientName].length}`);
 
     // Register events
-    client.on('message', (data) => {
+    client.on('message', (data, isBinary) => {
+      const message = isBinary ? data : data.toString();
       try {
-        this._execCommand(clientName, client, data);
+        this._execCommand(clientName, client, message);
       } catch (e) {
-        this.logger.warn('Invalid message:', e.message, data);
-        this._sendMessageToClient(client, 'error', { error: e.name, message: e.message, request: data });
+        this.logger.warn('Invalid message:', e.message, message);
+        this._sendMessageToClient(client, 'error', { error: e.name, message: e.message, request: message });
       }
     });
   }

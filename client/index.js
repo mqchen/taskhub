@@ -40,14 +40,14 @@ class Client {
     });
   }
 
-  static async create(args) {
+  static async create(clientArgs) {
     const opts = {
       url: null,
       clientName: null,
       key: null,
       timeout: 1000,
       retryDelay: 10,
-      ...args
+      ...clientArgs
     };
     let keepTrying = true;
     let lastError = null;
