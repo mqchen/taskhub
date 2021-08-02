@@ -1,9 +1,9 @@
 /* eslint class-methods-use-this: ["error", { "exceptMethods": ["_sendMessageToClient"] }] */
-import { WebSocketServer } from 'ws';
-import basicAuth from 'basic-auth';
-import Task from '../common/task';
-import ConsoleLogger from '../common/consoleLogger';
-import MemoryTaskStore from '../common/stores/memory';
+const WebSocket = require('ws');
+const basicAuth = require('basic-auth');
+const Task = require('../common/task');
+const ConsoleLogger = require('../common/consoleLogger');
+const MemoryTaskStore = require('../common/stores/memory');
 
 class Server {
   constructor(opts) {
@@ -25,7 +25,7 @@ class Server {
   }
 
   start() {
-    this.server = new WebSocketServer(this.opts);
+    this.server = new WebSocket.Server(this.opts);
     this.logger.info('🔌 Starting server at:', this.server.address().port);
     this.server.on('connection', (...args) => this._initClient(...args));
     this.address = this.server.address();
@@ -170,4 +170,4 @@ class Server {
   }
 }
 
-export default Server;
+module.exports = Server;

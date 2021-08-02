@@ -1,8 +1,5 @@
-import { Server, Client } from '..';
-
-async function wait(ms) {
-  return new Promise((resolve) => { setTimeout(() => resolve(), ms); });
-}
+const { Server, Client } = require('..');
+const wait = require('../common/wait');
 
 (async () => {
   const config = {

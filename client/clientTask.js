@@ -1,5 +1,5 @@
-import { v4 as uuid } from 'uuid';
-import Task from '../common/task';
+const uuid = require('uuid').v4;
+const Task = require('../common/task');
 
 class ClientTask extends Task {
   constructor(id, client) {
@@ -36,4 +36,4 @@ class ClientTask extends Task {
   }
 }
 
-export default ClientTask;
+module.exports = ClientTask;

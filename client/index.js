@@ -1,9 +1,9 @@
-import WebSocket from 'ws';
-import { v4 as uuid } from 'uuid';
-import ConsoleLogger from '../common/consoleLogger';
-import ClientTask from './clientTask';
-import MemoryTaskStore from '../common/stores/memory';
-import wait from '../common/wait';
+const WebSocket = require('ws');
+const uuid = require('uuid').v4;
+const ConsoleLogger = require('../common/consoleLogger');
+const ClientTask = require('./clientTask');
+const MemoryTaskStore = require('../common/stores/memory');
+const wait = require('../common/wait');
 
 class Client {
   constructor(url, clientName, key) {
@@ -136,4 +136,4 @@ class Client {
 
 Client.Task = ClientTask;
 
-export default Client;
+module.exports = Client;

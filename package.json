@@ -1,16 +1,15 @@
 {
   "name": "taskhubjs",
-  "version": "0.0.3",
-  "type": "module",
+  "version": "0.0.4",
   "description": "PubSubHub over websockets, with a task lifecycle",
   "keywords": ["websockets", "pubsub", "events"],
   "main": "index.js",
   "scripts": {
-    "example-server": "node --es-module-specifier-resolution=node example/server.js",
+    "example-server": "node example/server.js",
     "example-client": "npm run cli-client -- --host localhost --port 8080 --clientName test --key asdf",
-    "cli-client": "node --es-module-specifier-resolution=node cli-client/app.js",
-    "test": "ava -T=5s --node-arguments=\"--es-module-specifier-resolution=node\"",
-    "test-dev": "ava -wv -T=1s --node-arguments=\"--es-module-specifier-resolution=node\"",
+    "cli-client": "node cli-client/app.js",
+    "test": "ava -T=5s",
+    "test-dev": "ava -wv -T=1s",
     "upgrade": "ncu -u && npm i"
   },
   "repository": {
