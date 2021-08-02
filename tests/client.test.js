@@ -1,9 +1,16 @@
-const test = require('ava');
-const winston = require('winston');
-const getPort = require('get-port');
-const Client = require('../client');
-const Server = require('../server');
-const wait = require('../common/wait');
+import test from 'ava';
+import winston from 'winston';
+import getPort from 'get-port';
+import Client from '../client/index';
+import Server from '../server/index';
+import wait from '../common/wait';
+
+// const test = require('ava');
+// const winston = require('winston');
+// const getPort = require('get-port');
+// const Client = require('../client');
+// const Server = require('../server');
+// const wait = require('../common/wait');
 
 Client.defaultLogger = winston.createLogger({
   level: 'debug',

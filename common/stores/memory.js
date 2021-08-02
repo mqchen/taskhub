@@ -19,4 +19,4 @@ class MemoryTaskStore {
   }
 }
 
-module.exports = MemoryTaskStore;
+export default MemoryTaskStore;

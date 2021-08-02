@@ -1,8 +1,8 @@
-const test = require('ava');
-const winston = require('winston');
-const WebSocket = require('ws');
-const uuid = require('uuid').v4;
-const Server = require('../server');
+import test from 'ava';
+import winston from 'winston';
+import WebSocket from 'ws';
+import { v4 as uuid } from 'uuid';
+import Server from '../server/index';
 
 Server.defaultLogger = winston.createLogger({
   level: 'debug',

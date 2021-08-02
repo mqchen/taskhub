@@ -1,16 +1,20 @@
-const WebSocket = require('ws');
-const URL = require('url');
-const uuid = require('uuid').v4;
-const ConsoleLogger = require('../common/consoleLogger');
-const ClientTask = require('./clientTask');
-const MemoryTaskStore = require('../common/stores/memory');
-const wait = require('../common/wait');
+import WebSocket from 'ws';
+import URL from 'url';
+import { v4 as uuid } from 'uuid';
+import ConsoleLogger from '../common/consoleLogger';
+import ClientTask from './clientTask';
+import MemoryTaskStore from '../common/stores/memory';
+import wait from '../common/wait';
 
 class Client {
   constructor(url, clientName, key) {
     this.logger = ConsoleLogger;
     // Add basic auth to url:
     this.url = URL.format({ ...URL.parse(url), auth: `${clientName}:${key}` });
+    // this.url = new URL(url);
+    // this.url.username = clientName;
+    // this.url.password = key;
+    // this.url = this.url.toString();
     this.ws = new WebSocket(this.url);
     this.ws.on('message', this._processMessage.bind(this));
     this.ws.on('open', () => {
@@ -129,4 +133,4 @@ class Client {
 
 Client.Task = ClientTask;
 
-module.exports = Client;
+export default Client;

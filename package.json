@@ -1,15 +1,16 @@
 {
   "name": "taskhubjs",
   "version": "0.0.2",
+  "type": "module",
   "description": "PubSubHub over websockets, with a task lifecycle",
   "keywords": ["websockets", "pubsub", "events"],
   "main": "index.js",
   "scripts": {
-    "example-server": "node example/server.js",
+    "example-server": "node --es-module-specifier-resolution=node example/server.js",
     "example-client": "npm run cli-client -- --host localhost --port 8080 --clientName test --key asdf",
-    "cli-client": "node cli-client/app.js",
-    "test": "ava -T=5s",
-    "test-dev": "ava -wv -T=1s",
+    "cli-client": "node --es-module-specifier-resolution=node cli-client/app.js",
+    "test": "ava -T=5s --node-arguments=\"--es-module-specifier-resolution=node\"",
+    "test-dev": "ava -wv -T=1s --node-arguments=\"--es-module-specifier-resolution=node\"",
     "upgrade": "ncu -u && npm i"
   },
   "repository": {
@@ -24,10 +25,10 @@
   "homepage": "https://github.com/mqchen/taskhub/blob/master/README.md",
   "dependencies": {
     "basic-auth": "^2.0.1",
-    "chalk": "^4.1.1",
+    "chalk": "^4.1.2",
     "co": "^4.6.0",
     "co-prompt": "^1.0.0",
-    "command-line-args": "^5.1.1",
+    "command-line-args": "^5.2.0",
     "command-line-usage": "^6.1.1",
     "event-emitter": "^0.3.5",
     "js-yaml": "^4.1.0",
@@ -38,12 +39,12 @@
   },
   "devDependencies": {
     "ava": "^3.15.0",
-    "eslint": "^7.30.0",
+    "eslint": "^7.32.0",
     "eslint-config-airbnb": "^18.2.1",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-ava": "^12.0.0",
     "eslint-plugin-import": "^2.23.4",
     "get-port": "^5.1.1",
-    "npm-check-updates": "^11.8.1"
+    "npm-check-updates": "^11.8.3"
   }
 }

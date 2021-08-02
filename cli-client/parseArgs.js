@@ -1,7 +1,7 @@
-const commandLineArgs = require('command-line-args');
-const commandLineUsage = require('command-line-usage');
+import commandLineArgs from 'command-line-args';
+import commandLineUsage from 'command-line-usage';
 
-module.exports = () => {
+export default () => {
   // CONFIG
   // args
   const argsDef = [

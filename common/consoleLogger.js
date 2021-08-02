@@ -1,4 +1,4 @@
-const chalk = require('chalk');
+import chalk from 'chalk';
 
 const consoleLogger = {};
 
@@ -28,4 +28,4 @@ consoleLogger.info = (...args) => console.info(chalk.blue('ℹ'), ...args);
 consoleLogger.warn = (...args) => console.warn(chalk.yellow('⚠️'), ...args);
 consoleLogger.error = (...args) => console.error(chalk.red('🛑'), ...args);
 
-module.exports = consoleLogger;
+export default consoleLogger;

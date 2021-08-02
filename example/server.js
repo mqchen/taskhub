@@ -1,4 +1,4 @@
-const { Server, Client } = require('..');
+import { Server, Client } from '..';
 
 async function wait(ms) {
   return new Promise((resolve) => { setTimeout(() => resolve(), ms); });

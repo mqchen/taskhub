@@ -1,10 +1,10 @@
-const URL = require('url');
-const co = require('co');
-const prompt = require('co-prompt');
-const yaml = require('js-yaml');
-const chalk = require('chalk');
-const parseArgs = require('./parseArgs');
-const { Client } = require('..');
+import URL from 'url';
+import co from 'co';
+import prompt from 'co-prompt';
+import yaml from 'js-yaml';
+import chalk from 'chalk';
+import parseArgs from './parseArgs';
+import { Client } from '..';
 
 (async () => {
   try {

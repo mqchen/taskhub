@@ -1,8 +1,7 @@
 /* eslint no-labels: "off" */
 /* eslint-env es6 */
-const uuid = require('uuid').v4;
-
-const EventEmitter = require('event-emitter');
+import { v4 as uuid } from 'uuid';
+import EventEmitter from 'event-emitter';
 
 const EVENTS_AND_PROPS = {
   init: ['action', 'payload'],
@@ -177,4 +176,4 @@ class Task {
   }
 }
 
-module.exports = Task;
+export default Task;

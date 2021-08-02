@@ -1,6 +1,6 @@
-const test = require('ava');
-const uuid = require('uuid').v4;
-const Task = require('../common/task');
+import test from 'ava';
+import { v4 as uuid } from 'uuid';
+import Task from '../common/task';
 
 async function wait(ms) {
   return new Promise((resolve) => { setTimeout(() => resolve(), ms); });
