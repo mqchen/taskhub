@@ -11,12 +11,12 @@ class Server {
       port: 8080,
       verifyClient: this._verifyClient.bind(this)
     };
-    this.opts = { ...defaultOpts, ...opts };
-    this.logger = ConsoleLogger;
+    this.options = { ...defaultOpts, ...opts };
+    this.logger = Server.defaultLogger;
     this.server = null;
     this.address = null;
     this.credentials = {};
-    this.clients = [];
+    this.clients = {};
 
     // subcribers
     this.subs = {};
@@ -25,7 +25,7 @@ class Server {
   }
 
   start() {
-    this.server = new WebSocket.Server(this.opts);
+    this.server = new WebSocket.Server(this.options);
     this.logger.info('🔌 Starting server at:', this.server.address().port);
     this.server.on('connection', (...args) => this._initClient(...args));
     this.address = this.server.address();
@@ -169,5 +169,7 @@ class Server {
     return this.subs[action] || [];
   }
 }
+
+Server.defaultLogger = ConsoleLogger;
 
 module.exports = Server;

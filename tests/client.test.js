@@ -5,19 +5,14 @@ const Client = require('../client');
 const Server = require('../server');
 const wait = require('../common/wait');
 
-Client.defaultLogger = winston.createLogger({
-  level: 'debug',
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'debug',
   transports: [new winston.transports.Console({
     format: winston.format.simple()
   })]
 });
-
-Server.defaultLogger = winston.createLogger({
-  level: 'debug',
-  transports: [new winston.transports.Console({
-    format: winston.format.simple()
-  })]
-});
+Server.defaultLogger = logger;
+Client.defaultLogger = logger;
 
 async function createClient(t) {
   const client = await Client.create({

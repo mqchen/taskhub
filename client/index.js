@@ -7,7 +7,7 @@ const wait = require('../common/wait');
 
 class Client {
   constructor(url, clientName, key) {
-    this.logger = ConsoleLogger;
+    this.logger = Client.defaultLogger;
 
     this.subs = {};
     this.tasks = {};
@@ -135,5 +135,6 @@ class Client {
 }
 
 Client.Task = ClientTask;
+Client.defaultLogger = ConsoleLogger;
 
 module.exports = Client;

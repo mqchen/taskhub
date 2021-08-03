@@ -8,7 +8,7 @@
     "example-server": "node example/server.js",
     "example-client": "npm run cli-client -- --host localhost --port 8080 --clientName test --key asdf",
     "cli-client": "node cli-client/app.js",
-    "test": "ava -T=5s",
+    "test": "LOG_LEVEL=error ava -T=5s",
     "test-dev": "ava -wv -T=1s",
     "upgrade": "ncu -u && npm i"
   },

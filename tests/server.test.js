@@ -3,9 +3,10 @@ const winston = require('winston');
 const uuid = require('uuid').v4;
 const WebSocket = require('ws');
 const Server = require('../server');
+const wait = require('../common/wait');
 
 Server.defaultLogger = winston.createLogger({
-  level: 'debug',
+  level: process.env.LOG_LEVEL || 'debug',
   transports: [new winston.transports.Console({
     format: winston.format.simple()
   })]
@@ -185,4 +186,18 @@ test('Close unauthorized connections', async (t) => {
   })
     .then(t.fail)
     .catch(t.pass);
+});
+
+test.skip('Remove disconnected clients', async (t) => {
+  function countClients(hub) {
+    let count = 0;
+    Object.values(hub.clients).forEach((arr) => count += arr.length);
+    return count;
+  }
+  t.is(countClients(t.context.hub), 0);
+  const ws = await createConnection(t);
+  t.is(countClients(t.context.hub), 1);
+  ws.close();
+  await wait(1000); // wait for the heartbeat to finish
+  t.is(countClients(t.context.hub), 0);
 });
