@@ -6,12 +6,16 @@ const MemoryTaskStore = require('../common/stores/memory');
 const wait = require('../common/wait');
 
 class Client {
-  constructor(url, clientName, key) {
-    this.logger = Client.defaultLogger;
+  constructor(url, clientName, key, opts) {
+    const defaultOpts = {
+      logger: Client.defaultLogger
+    };
+    this.options = { ...defaultOpts, ...opts };
+    this.logger = this.options.logger;
+    this.taskStore = this.options.taskStore || new MemoryTaskStore();
 
     this.subs = {};
     this.tasks = {};
-    this.taskStore = new MemoryTaskStore();
 
     // Add basic auth to url:
     const urlObj = new URL(url);
@@ -34,7 +38,7 @@ class Client {
 
   static async _connectClient(opts) {
     return new Promise((resolve, reject) => {
-      const client = new Client(opts.url, opts.clientName, opts.key);
+      const client = new Client(opts.url, opts.clientName, opts.key, opts);
       client.ws.once('open', () => resolve(client));
       client.ws.once('error', (error) => reject(error));
     });

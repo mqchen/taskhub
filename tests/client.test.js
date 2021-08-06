@@ -11,21 +11,20 @@ const logger = winston.createLogger({
     format: winston.format.simple()
   })]
 });
-Server.defaultLogger = logger;
-Client.defaultLogger = logger;
 
 async function createClient(t) {
   const client = await Client.create({
     url: `ws://localhost:${t.context.hub.address.port}`,
     clientName: t.context.clientName,
     key: t.context.creds.key,
-    timeout: t.context.timeout
+    timeout: t.context.timeout,
+    logger
   });
   return client;
 }
 
 test.beforeEach(async (t) => {
-  t.context.hub = new Server({ port: await getPort() });
+  t.context.hub = new Server({ port: await getPort(), logger });
   t.context.creds = { key: `password_${Math.random()}` };
   t.context.clientName = `test_${Math.random()}`;
   t.context.timeout = 100;

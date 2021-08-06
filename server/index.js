@@ -9,19 +9,18 @@ class Server {
   constructor(opts) {
     const defaultOpts = {
       port: 8080,
-      verifyClient: this._verifyClient.bind(this)
+      verifyClient: this._verifyClient.bind(this),
+      logger: Server.defaultLogger
     };
     this.options = { ...defaultOpts, ...opts };
-    this.logger = Server.defaultLogger;
+    this.logger = this.options.logger;
+    this.taskStore = this.options.taskStore || new MemoryTaskStore();
+
     this.server = null;
     this.address = null;
     this.credentials = {};
     this.clients = {};
-
-    // subcribers
     this.subs = {};
-    // Task store, will be moved to Redis or MongoDB in the future
-    this.taskStore = new MemoryTaskStore();
   }
 
   start() {

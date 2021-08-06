@@ -5,7 +5,7 @@ const WebSocket = require('ws');
 const Server = require('../server');
 const wait = require('../common/wait');
 
-Server.defaultLogger = winston.createLogger({
+const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'debug',
   transports: [new winston.transports.Console({
     format: winston.format.simple()
@@ -13,7 +13,7 @@ Server.defaultLogger = winston.createLogger({
 });
 
 test.beforeEach((t) => {
-  t.context.hub = new Server({ port: 0 });
+  t.context.hub = new Server({ port: 0, logger });
   t.context.creds = { key: `password_${Math.random()}` };
   t.context.clientName = `test_${Math.random()}`;
   t.context.hub.addCredentials(t.context.clientName, t.context.creds);
