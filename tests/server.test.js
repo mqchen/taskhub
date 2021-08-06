@@ -13,7 +13,11 @@ const logger = winston.createLogger({
 });
 
 test.beforeEach((t) => {
-  t.context.hub = new Server({ port: 0, logger });
+  t.context.hub = new Server({
+    port: 0,
+    logger,
+    heartbeat: 500
+  });
   t.context.creds = { key: `password_${Math.random()}` };
   t.context.clientName = `test_${Math.random()}`;
   t.context.hub.addCredentials(t.context.clientName, t.context.creds);
@@ -188,7 +192,7 @@ test('Close unauthorized connections', async (t) => {
     .catch(t.pass);
 });
 
-test.skip('Remove disconnected clients', async (t) => {
+test('Remove disconnected clients', async (t) => {
   function countClients(hub) {
     let count = 0;
     Object.values(hub.clients).forEach((arr) => count += arr.length);
@@ -198,6 +202,6 @@ test.skip('Remove disconnected clients', async (t) => {
   const ws = await createConnection(t);
   t.is(countClients(t.context.hub), 1);
   ws.close();
-  await wait(1000); // wait for the heartbeat to finish
+  await wait(t.context.hub.options.heartbeat * 2); // wait for the heartbeat to finish
   t.is(countClients(t.context.hub), 0);
 });

@@ -1,4 +1,3 @@
-/* eslint class-methods-use-this: ["error", { "exceptMethods": ["_sendMessageToClient"] }] */
 const WebSocket = require('ws');
 const basicAuth = require('basic-auth');
 const Task = require('../common/task');
@@ -10,7 +9,8 @@ class Server {
     const defaultOpts = {
       port: 8080,
       verifyClient: this._verifyClient.bind(this),
-      logger: Server.defaultLogger
+      logger: Server.defaultLogger,
+      heartbeat: 5000 // check for dead clients every 30 sec
     };
     this.options = { ...defaultOpts, ...opts };
     this.logger = this.options.logger;
@@ -21,6 +21,10 @@ class Server {
     this.credentials = {};
     this.clients = {};
     this.subs = {};
+    this.heartbeatInterval = setInterval(
+      this._cleanUpBrokenClients.bind(this),
+      this.options.heartbeat
+    );
   }
 
   start() {
@@ -37,6 +41,7 @@ class Server {
 
   stop() {
     if (this.server) this.server.close();
+    clearInterval(this.heartbeatInterval);
   }
 
   addCredentials(clientName, creds) {
@@ -72,6 +77,13 @@ class Server {
     const creds = basicAuth(req);
     // const clientName = req.headers.client;
     const clientName = creds.name;
+
+    // Heartbeat
+    // eslint-disable-next-line no-param-reassign
+    client.isAlive = true;
+    client.on('pong', () => { this.isAlive = true; });
+
+    // Register it
     this._getClientsFor(clientName).push(client);
     this.logger.info(`👋 New client for '${clientName}' authenticated. Total instances of this client: ${this.clients[clientName].length}`);
 
@@ -87,6 +99,30 @@ class Server {
     });
   }
 
+  // Check for dead clients and remove them
+  // https://github.com/websockets/ws#how-to-detect-and-close-broken-connections
+  _cleanUpBrokenClients() {
+    const newClients = {};
+    Object.keys(this.clients).forEach((clientName) => {
+      for (let i = 0; i < this.clients[clientName].length; i += 1) {
+        const client = this.clients[clientName][i];
+        if (!client) {
+          // will not be added
+        } else if (client.isAlive === false) {
+          client.terminate();
+        } else {
+          client.isAlive = false;
+          client.ping(() => {});
+          if (!Object.prototype.hasOwnProperty.call(newClients, clientName)) {
+            newClients[clientName] = [];
+          }
+          newClients[clientName].push(client);
+        }
+      }
+    });
+    this.clients = newClients;
+  }
+
   // Send messages
   _sendMessage(clientName, status, msg) {
     this.logger.info(`📤 Sending ${status} message to '${clientName}'.`, msg);
@@ -95,6 +131,7 @@ class Server {
     });
   }
 
+  // eslint-disable-next-line class-methods-use-this
   _sendMessageToClient(client, status, msg) {
     if (!['ok', 'error'].includes(status)) throw new RangeError('Status must be either ok or error.');
     client.send(JSON.stringify({ status, ...msg }));
