@@ -8,7 +8,8 @@ const wait = require('../common/wait');
 class Client {
   constructor(url, clientName, key, opts) {
     const defaultOpts = {
-      logger: Client.defaultLogger
+      logger: Client.defaultLogger,
+      // heartbeat: 5000 // same as server heartbeat. Padding added in addition.
     };
     this.options = { ...defaultOpts, ...opts };
     this.logger = this.options.logger;
@@ -30,6 +31,12 @@ class Client {
       this.logger.info('✅ Client online.');
       this.ws.on('close', () => this.logger.info('❌ Client offline.'));
     });
+    // this.ws.on('ping', () => {
+    //   clearTimeout(this.heartbeatTimeout);
+    //   this.heartbeatTimeout = setTimeout(() => {
+    //     this.ws.terminate();
+    //   }, this.options.heartbeat + 1000);
+    // });
   }
 
   _findSubs(action) {

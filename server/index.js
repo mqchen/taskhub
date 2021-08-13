@@ -10,7 +10,7 @@ class Server {
       port: 8080,
       verifyClient: this._verifyClient.bind(this),
       logger: Server.defaultLogger,
-      heartbeat: 5000 // check for dead clients every 30 sec
+      // heartbeat: 5000 // check for dead clients every 30 sec
     };
     this.options = { ...defaultOpts, ...opts };
     this.logger = this.options.logger;
@@ -21,10 +21,10 @@ class Server {
     this.credentials = {};
     this.clients = {};
     this.subs = {};
-    this.heartbeatInterval = setInterval(
-      this._cleanUpBrokenClients.bind(this),
-      this.options.heartbeat
-    );
+    // this.heartbeatInterval = setInterval(
+    //   this._cleanUpBrokenClients.bind(this),
+    //   this.options.heartbeat
+    // );
   }
 
   start() {
@@ -101,27 +101,29 @@ class Server {
 
   // Check for dead clients and remove them
   // https://github.com/websockets/ws#how-to-detect-and-close-broken-connections
-  _cleanUpBrokenClients() {
-    const newClients = {};
-    Object.keys(this.clients).forEach((clientName) => {
-      for (let i = 0; i < this.clients[clientName].length; i += 1) {
-        const client = this.clients[clientName][i];
-        if (!client) {
-          // will not be added
-        } else if (client.isAlive === false) {
-          client.terminate();
-        } else {
-          client.isAlive = false;
-          client.ping(() => {});
-          if (!Object.prototype.hasOwnProperty.call(newClients, clientName)) {
-            newClients[clientName] = [];
-          }
-          newClients[clientName].push(client);
-        }
-      }
-    });
-    this.clients = newClients;
-  }
+  // _cleanUpBrokenClients() {
+  //   const newClients = {};
+  //   Object.keys(this.clients).forEach((clientName) => {
+  //     for (let i = 0; i < this.clients[clientName].length; i += 1) {
+  //       const client = this.clients[clientName][i];
+  //       if (!client) {
+  //         // will not be added
+  //         this.logger.info('❌ Client is not alive. Removing.', clientName);
+  //       } else if (client.isAlive === false) {
+  //         client.terminate();
+  //         this.logger.info('❌ Client is not alive. Terminating and removing.', clientName);
+  //       } else {
+  //         client.isAlive = false;
+  //         client.ping(() => {});
+  //         if (!Object.prototype.hasOwnProperty.call(newClients, clientName)) {
+  //           newClients[clientName] = [];
+  //         }
+  //         newClients[clientName].push(client);
+  //       }
+  //     }
+  //   });
+  //   this.clients = newClients;
+  // }
 
   // Send messages
   _sendMessage(clientName, status, msg) {
